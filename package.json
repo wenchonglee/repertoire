@@ -1,0 +1,12 @@
+{
+  "name": "repertoire",
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint"
+  },
+  "devDependencies": {
+    "turbo": "1.9.7",
+    "typescript": "5.0.4"
+  }
+}

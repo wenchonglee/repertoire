@@ -1,0 +1,49 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Runs {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  runId     String        @unique
+  startTime String
+  endTime   String?
+  allTests  TestSummary[]
+  status    RunStatus?
+}
+
+enum RunStatus {
+  passed
+  failed
+  timedout
+  interrupted
+}
+
+type TestSummary {
+  testId String
+  title  String
+}
+
+model Tests {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  runId     String
+  testId    String
+  title     String
+  startTime DateTime
+  endTime   DateTime?
+  outcome   Outcome?
+  errors    String?
+
+  @@unique([runId, testId])
+}
+
+enum Outcome {
+  skipped
+  expected
+  unexpected
+  flaky
+}

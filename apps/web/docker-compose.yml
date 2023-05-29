@@ -1,0 +1,21 @@
+services:
+  mongodb:
+    image: bitnami/mongodb:6.0.6
+    # replicaset required for changestream to be enabled
+    environment:
+      - MONGODB_REPLICA_SET_MODE=primary
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo:/data/db
+    networks:
+      - service-network
+    restart: always
+
+networks:
+  service-network:
+    driver: bridge
+
+volumes:
+  mongo:
