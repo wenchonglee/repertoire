@@ -1,7 +1,8 @@
 import { request } from "@playwright/test";
 import { FullConfig, FullResult, Reporter, Suite, TestCase, TestResult } from "@playwright/test/reporter";
+import { simpleHash } from "./simpleHash";
 
-const RUN_ID = "RUN_ID_12";
+const RUN_ID = simpleHash(new Date().toISOString());
 
 const reportTestRunStart = async (suite: Suite) => {
   const context = await request.newContext({
