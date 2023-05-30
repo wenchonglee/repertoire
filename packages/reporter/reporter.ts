@@ -67,7 +67,7 @@ const reportTestEnd = async (test: TestCase, result: TestResult, context?: APIRe
 
 class MyReporter implements Reporter {
   context: APIRequestContext | undefined;
-  baseURL: "http://localhost:3000/api/";
+  baseURL = "http://localhost:3000/api/";
 
   async onBegin(config: FullConfig, suite: Suite) {
     console.log(`Starting the run with ${suite.allTests().length} tests`);
