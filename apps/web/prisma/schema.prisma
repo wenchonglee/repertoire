@@ -10,8 +10,8 @@ generator client {
 model Runs {
   id        String        @id @default(auto()) @map("_id") @db.ObjectId
   runId     String        @unique
-  startTime String
-  endTime   String?
+  startTime DateTime
+  endTime   DateTime?
   allTests  TestSummary[]
   status    RunStatus?
 }
@@ -29,16 +29,40 @@ type TestSummary {
 }
 
 model Tests {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  runId     String
-  testId    String
-  title     String
-  startTime DateTime
-  endTime   DateTime?
-  outcome   Outcome?
-  errors    String?
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  runId String
+
+  // TestCase attributes
+  testId         String
+  title          String
+  startTime      DateTime
+  duration       Int?
+  outcome        Outcome?
+  titlePath      String[]
+  annotations    Annotation[]
+  location       Location
+  retries        Int
+  timeout        Int
+  expectedStatus TestStatus
+
+  // TestResult attributes
+  errors String?
+
+  // Supplementary attributes
+  endTime DateTime?
 
   @@unique([runId, testId])
+}
+
+type Annotation {
+  type        String
+  description String?
+}
+
+type Location {
+  column Int
+  file   String
+  line   Int
 }
 
 enum Outcome {
@@ -46,4 +70,12 @@ enum Outcome {
   expected
   unexpected
   flaky
+}
+
+enum TestStatus {
+  passed
+  failed
+  timedOut
+  skipped
+  interrupted
 }

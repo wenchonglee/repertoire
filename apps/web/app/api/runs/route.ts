@@ -5,7 +5,11 @@ export async function GET(request: Request) {
   // const { searchParams } = new URL(request.url);
   // const runId = searchParams.get('runId');
 
-  const runs = await prisma.runs.findMany();
+  const runs = await prisma.runs.findMany({
+    orderBy: {
+      startTime: "desc",
+    },
+  });
 
   return new Response(JSON.stringify(runs), {
     status: 200,

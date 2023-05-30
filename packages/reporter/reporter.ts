@@ -22,11 +22,12 @@ const reportTestRunStart = async (suite: Suite, context?: APIRequestContext) => 
   }
 };
 
-const reportTestRunEnd = async (context?: APIRequestContext) => {
+const reportTestRunEnd = async (result: FullResult, context?: APIRequestContext) => {
   try {
     const response = await context?.put(`./runs/${RUN_ID}`, {
       data: {
         endTime: new Date().toISOString(),
+        status: result.status,
       },
       headers: { "content-type": "application/json" },
     });
@@ -42,6 +43,12 @@ const reportTestStart = async (test: TestCase, result: TestResult, context?: API
         testId: test.id,
         title: test.title,
         startTime: new Date().toISOString(),
+        titlePath: test.titlePath(),
+        annotations: test.annotations,
+        location: test.location,
+        retries: test.retries,
+        timeout: test.timeout,
+        expectedStatus: test.expectedStatus,
       },
       headers: { "content-type": "application/json" },
     });
@@ -55,7 +62,7 @@ const reportTestEnd = async (test: TestCase, result: TestResult, context?: APIRe
     const response = await context?.put(`./runs/${RUN_ID}/tests/${test.id}`, {
       data: {
         endTime: new Date().toISOString(),
-        outcome: test.outcome,
+        outcome: test.outcome(),
         errors: JSON.stringify(result.errors),
       },
       headers: { "content-type": "application/json" },
@@ -70,7 +77,7 @@ class MyReporter implements Reporter {
   baseURL = "http://localhost:3000/api/";
 
   async onBegin(config: FullConfig, suite: Suite) {
-    console.log(`Starting the run with ${suite.allTests().length} tests`);
+    console.log(`Starting the run with ${suite.allTests().length} tests, with Run ID: ${RUN_ID}`);
     // console.log(Object.keys(process.env));
 
     this.context = await request.newContext({ baseURL: this.baseURL });
@@ -79,19 +86,17 @@ class MyReporter implements Reporter {
 
   onTestBegin(test: TestCase, result: TestResult) {
     console.log(`Starting test ID: ${test.id}, Title: ${test.title}`);
-
     reportTestStart(test, result, this.context);
   }
 
   onTestEnd(test: TestCase, result: TestResult) {
     console.log(`Finished test ${test.title}: ${result.status}`);
-
     reportTestEnd(test, result, this.context);
   }
 
   async onEnd(result: FullResult) {
     console.log(`Finished the run: ${result.status}`);
-    await reportTestRunEnd(this.context);
+    await reportTestRunEnd(result, this.context);
   }
 }
 
