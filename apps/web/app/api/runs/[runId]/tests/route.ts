@@ -17,7 +17,7 @@ const TestPostRequest = z.object({
 export type TestResponse = z.infer<typeof TestPostRequest> & z.infer<typeof TestPutRequest>;
 
 export async function GET(request: Request, { params }: { params: { runId: string } }) {
-  const tests = await prisma.tests.findMany({
+  const tests = await prisma.playwrightTests.findMany({
     where: {
       runId: params.runId,
     },

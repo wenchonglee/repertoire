@@ -1,19 +1,77 @@
 import { APIRequestContext, request } from "@playwright/test";
 import { FullConfig, FullResult, Reporter, Suite, TestCase, TestResult } from "@playwright/test/reporter";
+import path from "node:path";
 import { simpleHash } from "./simpleHash";
 
 const RUN_ID = simpleHash(new Date().toISOString());
 
-const reportTestRunStart = async (suite: Suite, context?: APIRequestContext) => {
+const reportTestRunStart = async (config: FullConfig, suite: Suite, context: APIRequestContext) => {
+  /**
+   * * Determine the config, it is assumed all shards have the same config
+   */
+  const projects = suite.suites.map((projectSuite) => projectSuite.title);
+  const totalShards = config.shard.total;
+  const allTests = [];
+
+  /**
+   * * Group by projects, first level suite is always the project
+   */
+  for (const projectSuite of suite.suites) {
+    console.log("Project: ", projectSuite.title);
+    const projectName = projectSuite.title;
+
+    for (const fileSuite of projectSuite.suites) {
+      const fileName = toPosixPath(path.relative(config.rootDir, fileSuite.location!.file));
+      /**
+       * * At this point, a suite can either contain the test itself, or a group of tests (test.describe)
+       * * For now, we choose to disregard the hierarchy and get all the tests in the file
+       */
+
+      // Push all base level tests
+      fileSuite.tests.forEach((test) => {
+        allTests.push({
+          fileName,
+          projectName,
+          title: test.title,
+          testId: test.id,
+          tags: (test.title.match(/@[\S]+/g) || ([] as string[])).map((t) => t.substring(1)),
+          titlePath: test.titlePath(),
+          timeout: test.timeout,
+          annotations: test.annotations,
+          expectedStatus: test.expectedStatus,
+        });
+      });
+
+      // Push tests for each test.describe group
+      fileSuite.suites.forEach((groupSuite) =>
+        groupSuite.tests.forEach((test) => {
+          allTests.push({
+            groupTitle: groupSuite.title,
+            fileName,
+            projectName,
+            title: test.title,
+            testId: test.id,
+            tags: (test.title.match(/@[\S]+/g) || ([] as string[])).map((t) => t.substring(1)),
+            titlePath: test.titlePath(),
+            timeout: test.timeout,
+            annotations: test.annotations,
+            expectedStatus: test.expectedStatus,
+          });
+        })
+      );
+    }
+  }
+
   try {
-    const response = await context?.post("./runs", {
+    const response = await context.post("./runs", {
       data: {
         runId: RUN_ID,
         startTime: new Date().toISOString(),
-        allTests: suite.allTests().map((test) => ({
-          testId: test.id,
-          title: test.title,
-        })),
+        projects,
+        totalShards,
+        shardId: config.shard.current,
+        version: config.version,
+        tests: allTests,
       },
       headers: { "content-type": "application/json" },
     });
@@ -22,9 +80,9 @@ const reportTestRunStart = async (suite: Suite, context?: APIRequestContext) => 
   }
 };
 
-const reportTestRunEnd = async (result: FullResult, context?: APIRequestContext) => {
+const reportTestRunEnd = async (result: FullResult, context: APIRequestContext) => {
   try {
-    const response = await context?.put(`./runs/${RUN_ID}`, {
+    const response = await context.put(`./runs/${RUN_ID}`, {
       data: {
         endTime: new Date().toISOString(),
         status: result.status,
@@ -36,19 +94,11 @@ const reportTestRunEnd = async (result: FullResult, context?: APIRequestContext)
   }
 };
 
-const reportTestStart = async (test: TestCase, result: TestResult, context?: APIRequestContext) => {
+const reportTestStart = async (test: TestCase, result: TestResult, context: APIRequestContext) => {
   try {
-    const response = await context?.post(`./runs/${RUN_ID}/tests`, {
+    const response = await context.put(`./runs/${RUN_ID}/tests/${test.id}`, {
       data: {
-        testId: test.id,
-        title: test.title,
         startTime: new Date().toISOString(),
-        titlePath: test.titlePath(),
-        annotations: test.annotations,
-        location: test.location,
-        retries: test.retries,
-        timeout: test.timeout,
-        expectedStatus: test.expectedStatus,
       },
       headers: { "content-type": "application/json" },
     });
@@ -57,9 +107,9 @@ const reportTestStart = async (test: TestCase, result: TestResult, context?: API
   }
 };
 
-const reportTestEnd = async (test: TestCase, result: TestResult, context?: APIRequestContext) => {
+const reportTestEnd = async (test: TestCase, result: TestResult, context: APIRequestContext) => {
   try {
-    const response = await context?.put(`./runs/${RUN_ID}/tests/${test.id}`, {
+    const response = await context.put(`./runs/${RUN_ID}/tests/${test.id}`, {
       data: {
         endTime: new Date().toISOString(),
         outcome: test.outcome(),
@@ -72,6 +122,10 @@ const reportTestEnd = async (test: TestCase, result: TestResult, context?: APIRe
   }
 };
 
+export function toPosixPath(aPath: string): string {
+  return aPath.split(path.sep).join(path.posix.sep);
+}
+
 class MyReporter implements Reporter {
   context: APIRequestContext | undefined;
   baseURL = "http://localhost:3000/api/";
@@ -81,7 +135,7 @@ class MyReporter implements Reporter {
     // console.log(Object.keys(process.env));
 
     this.context = await request.newContext({ baseURL: this.baseURL });
-    reportTestRunStart(suite, this.context);
+    reportTestRunStart(config, suite, this.context);
   }
 
   onTestBegin(test: TestCase, result: TestResult) {

@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/db";
-import { RunPutRequest } from "../models";
+import { RunPutRequest } from "./models";
 
 export async function PUT(request: Request, { params }: { params: { runId: string } }) {
   const requestBody = RunPutRequest.parse(await request.json());
 
-  const run = await prisma.runs.update({
+  const run = await prisma.playwrightRuns.update({
     where: {
       runId: params.runId,
     },

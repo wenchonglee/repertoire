@@ -7,72 +7,74 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model Runs {
-  id        String        @id @default(auto()) @map("_id") @db.ObjectId
-  runId     String        @unique
-  startTime DateTime
-  endTime   DateTime?
-  allTests  TestSummary[]
-  status    RunStatus?
+//-------------------
+// Runs
+//-------------------
+model PlaywrightRuns {
+  id           String              @id @default(auto()) @map("_id") @db.ObjectId
+  runId        String              @unique
+  startTime    DateTime
+  endTime      DateTime?
+  status       PlaywrightRunStatus @default(running)
+  projects     String[]
+  totalShards  Int
+  joinedShards Int[]
+  version      String
 }
 
-enum RunStatus {
+enum PlaywrightRunStatus {
   passed
   failed
   timedout
   interrupted
+  running // Non-native status
 }
 
-type TestSummary {
-  testId String
-  title  String
-}
+//-------------------
+// Tests
+//-------------------
+model PlaywrightTests {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
 
-model Tests {
-  id    String @id @default(auto()) @map("_id") @db.ObjectId
-  runId String
-
-  // TestCase attributes
+  // Attributes on run start
+  runId          String
+  projectName    String
+  fileName       String
   testId         String
   title          String
-  startTime      DateTime
-  duration       Int?
-  outcome        Outcome?
+  groupTitle     String?
+  tags           String[]
   titlePath      String[]
-  annotations    Annotation[]
-  location       Location
-  retries        Int
   timeout        Int
-  expectedStatus TestStatus
+  annotations    PlaywrightAnnotation[]
+  expectedStatus PlaywrightTestStatus
 
-  // TestResult attributes
-  errors String?
+  // Added attributes on test start
+  startTime DateTime?
+  duration  Int?
+  retries   Int?
+  outcome   PlaywrightOutcome?
 
-  // Supplementary attributes
+  // Added attributes on test end
+  errors  String?
   endTime DateTime?
 
   @@unique([runId, testId])
 }
 
-type Annotation {
+type PlaywrightAnnotation {
   type        String
   description String?
 }
 
-type Location {
-  column Int
-  file   String
-  line   Int
-}
-
-enum Outcome {
+enum PlaywrightOutcome {
   skipped
   expected
   unexpected
   flaky
 }
 
-enum TestStatus {
+enum PlaywrightTestStatus {
   passed
   failed
   timedOut

@@ -45,7 +45,7 @@ export default async function LatestRuns() {
                 {dayjs(row.startTime).fromNow()}
               </Table.Cell>
               <Table.Cell>{duration}</Table.Cell>
-              <Table.Cell>{row.allTests.length}</Table.Cell>
+              {/* <Table.Cell>{row.allTests.length}</Table.Cell> */}
             </Table.Row>
           );
         })}
