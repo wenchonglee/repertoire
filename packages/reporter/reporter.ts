@@ -115,6 +115,7 @@ const reportTestEnd = async (test: TestCase, result: TestResult, context: APIReq
         outcome: test.outcome(),
         errors: JSON.stringify(result.errors),
         status: result.status,
+        expectedStatus: test.expectedStatus,
       },
       headers: { "content-type": "application/json" },
     });

@@ -5,5 +5,6 @@ export const TestPutRequest = z.object({
   endTime: z.string().datetime().optional(),
   outcome: z.enum(["skipped", "expected", "unexpected", "flaky"]).optional(),
   status: z.enum(["passed", "failed", "timedOut", "skipped", "interrupted"]).optional(),
+  expectedStatus: z.enum(["passed", "failed", "timedOut", "skipped", "interrupted"]).optional(),
   errors: z.string().nullish(),
 });
