@@ -2,7 +2,7 @@ import { Badge } from "@/components/Badge";
 import { Table } from "@/components/Table";
 import dayjs from "dayjs";
 import Link from "next/link";
-import type { RunResponse } from "./api/runs/models";
+import type { RunResponse } from "./api/runs/route";
 
 const getData = async (): Promise<RunResponse[]> => {
   const res = await fetch("http://localhost:3000/api/runs");
@@ -26,12 +26,15 @@ export default async function LatestRuns() {
           <Table.Head>Start Time</Table.Head>
           <Table.Head>Duration</Table.Head>
           <Table.Head>Test of tests</Table.Head>
+          <Table.Head>Shards</Table.Head>
         </Table.Row>
       </Table.Header>
 
       <Table.Body>
         {data.map((row, index) => {
-          const duration = !!row.endTime ? dayjs(row.endTime).from(dayjs(row.startTime), true) : null;
+          const duration = !!row.endTime
+            ? dayjs.duration(dayjs(row.endTime).diff(dayjs(row.startTime))).format("HH:mm:ss")
+            : null;
 
           return (
             <Table.Row key={index}>
@@ -45,6 +48,7 @@ export default async function LatestRuns() {
                 {dayjs(row.startTime).fromNow()}
               </Table.Cell>
               <Table.Cell>{duration}</Table.Cell>
+              <Table.Cell>{row.totalShards}</Table.Cell>
               {/* <Table.Cell>{row.allTests.length}</Table.Cell> */}
             </Table.Row>
           );

@@ -114,6 +114,7 @@ const reportTestEnd = async (test: TestCase, result: TestResult, context: APIReq
         endTime: new Date().toISOString(),
         outcome: test.outcome(),
         errors: JSON.stringify(result.errors),
+        status: result.status,
       },
       headers: { "content-type": "application/json" },
     });
@@ -122,8 +123,8 @@ const reportTestEnd = async (test: TestCase, result: TestResult, context: APIReq
   }
 };
 
-export function toPosixPath(aPath: string): string {
-  return aPath.split(path.sep).join(path.posix.sep);
+export function toPosixPath(pathString: string): string {
+  return pathString.split(path.sep).join(path.posix.sep);
 }
 
 class MyReporter implements Reporter {

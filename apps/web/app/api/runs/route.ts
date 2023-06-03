@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/db";
+import type { z } from "zod";
+import type { RunPutRequest } from "./[runId]/models";
 import { RunPostRequest } from "./models";
 
 // export async function GET(request: Request) {
@@ -28,6 +30,8 @@ import { RunPostRequest } from "./models";
 //     },
 //   });
 // }
+export type RunResponse = RunPostRequest & z.infer<typeof RunPutRequest>;
+
 export async function GET(request: Request) {
   // const { searchParams } = new URL(request.url);
   // const runId = searchParams.get('runId');

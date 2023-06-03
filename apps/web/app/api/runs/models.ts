@@ -1,5 +1,4 @@
 import { z } from "zod";
-import type { RunPutRequest } from "./[runId]/models";
 
 export const RunPostRequest = z.object({
   runId: z.string().min(1, "Run ID is required"),
@@ -30,4 +29,3 @@ export const RunPostRequest = z.object({
 });
 
 export type RunPostRequest = z.infer<typeof RunPostRequest>;
-export type RunResponse = RunPostRequest & z.infer<typeof RunPutRequest>;

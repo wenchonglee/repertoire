@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -6,6 +7,7 @@ import Header from "./header";
 
 const inter = Inter({ subsets: ["latin"], display: "block" });
 dayjs.extend(relativeTime);
+dayjs.extend(duration);
 
 export const metadata = {
   title: "Create Next App",
