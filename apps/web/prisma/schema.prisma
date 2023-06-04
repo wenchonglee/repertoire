@@ -13,6 +13,7 @@ generator client {
 model PlaywrightRuns {
   id           String              @id @default(auto()) @map("_id") @db.ObjectId
   runId        String              @unique
+  updatedAt    DateTime            @updatedAt
   startTime    DateTime
   endTime      DateTime?
   status       PlaywrightRunStatus @default(running)
@@ -20,6 +21,7 @@ model PlaywrightRuns {
   totalShards  Int
   joinedShards Int[]
   version      String
+  results      RunResults?
 }
 
 enum PlaywrightRunStatus {
@@ -30,11 +32,19 @@ enum PlaywrightRunStatus {
   running // Non-native status
 }
 
+type RunResults {
+  skipped    Int @default(0)
+  expected   Int @default(0)
+  unexpected Int @default(0)
+  flaky      Int @default(0)
+}
+
 //-------------------
 // Tests
 //-------------------
 model PlaywrightTests {
-  id String @id @default(auto()) @map("_id") @db.ObjectId
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  updatedAt DateTime @updatedAt
 
   // Attributes on run start
   runId          String

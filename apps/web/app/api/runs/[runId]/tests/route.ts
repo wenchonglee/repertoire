@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/db";
 import { z } from "zod";
-import { getStream } from "../../emitter";
 import type { TestPutRequest } from "./[testId]/models";
 import type { TestPostRequest } from "./models";
 
@@ -13,9 +12,6 @@ export async function GET(request: Request, { params }: { params: { runId: strin
     pipeline: [{ $match: { runId: params.runId } }, { $group: { _id: "$fileName", tests: { $push: "$$ROOT" } } }],
     options: {},
   });
-  const stream = getStream();
-
-  stream.emit("new event");
 
   return new Response(JSON.stringify(tests), {
     status: 200,

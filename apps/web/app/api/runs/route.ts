@@ -1,41 +1,10 @@
 import { prisma } from "@/lib/db";
-import type { z } from "zod";
-import type { RunPutRequest } from "./[runId]/models";
+import type { PlaywrightRuns } from "@prisma/client";
 import { RunPostRequest } from "./models";
 
-// export async function GET(request: Request) {
-//   // const runs = await prisma.runs.findMany({
-//   //   orderBy: {
-//   //     startTime: "desc",
-//   //   },
-//   // });
-//   let responseStream = new TransformStream();
-//   const writer = responseStream.writable.getWriter();
-
-//   const encoder = new TextEncoder();
-//   const stream = getStream();
-//   stream.on("new event", () => {
-//     console.log("!");
-//     writer.write(encoder.encode(`data: {"time": ${new Date().toISOString()}}`));
-//   });
-//   stream.emit("new event");
-
-//   return new Response(responseStream.readable, {
-//     status: 200,
-//     headers: {
-//       "content-type": "text/event-stream",
-//       connection: "keep-alive",
-//       "cache-control": "no-cache, no-transform",
-//       "Access-Control-Allow-Origin": "*",
-//     },
-//   });
-// }
-export type RunResponse = RunPostRequest & z.infer<typeof RunPutRequest>;
+export type RunResponse = PlaywrightRuns;
 
 export async function GET(request: Request) {
-  // const { searchParams } = new URL(request.url);
-  // const runId = searchParams.get('runId');
-
   const runs = await prisma.playwrightRuns.findMany({
     orderBy: {
       startTime: "desc",
