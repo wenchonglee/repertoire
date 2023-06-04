@@ -51,11 +51,7 @@ export default async function TestSummary(props: { runId: string }) {
 const TestStatusIcon = ({ status }: { status: TestResponse["status"] }) => {
   switch (status) {
     case "failed":
-      return (
-        <div>
-          <XCircle className="text-red-500 w-4 h-4" />
-        </div>
-      );
+      return <XCircle className="text-red-500 w-4 h-4" />;
 
     case "interrupted":
       return <AlertCircle className="text-yellow-500 w-4 h-4" />;

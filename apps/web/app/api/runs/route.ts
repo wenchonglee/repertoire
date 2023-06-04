@@ -3,18 +3,29 @@ import type { PlaywrightRuns } from "@prisma/client";
 import { RunPostRequest } from "./models";
 
 export type RunResponse = PlaywrightRuns;
+const PAGE_SIZE = 2;
 
 export async function GET(request: Request) {
-  const runs = await prisma.playwrightRuns.findMany({
-    orderBy: {
-      startTime: "desc",
-    },
-  });
+  const { searchParams } = new URL(request.url);
+  const page = searchParams.get("page");
 
-  return new Response(JSON.stringify(runs), {
+  const [totalCount, runs] = await prisma.$transaction([
+    prisma.playwrightRuns.count(),
+    prisma.playwrightRuns.findMany({
+      take: PAGE_SIZE,
+      // page is 1-indexed to clients
+      skip: page ? (Number(page) - 1) * PAGE_SIZE : 0,
+      orderBy: {
+        startTime: "desc",
+      },
+    }),
+  ]);
+
+  return new Response(JSON.stringify({ totalCount, runs }), {
     status: 200,
     headers: {
       "content-type": "application/json",
+      "cache-control": "no-cache",
     },
   });
 }
