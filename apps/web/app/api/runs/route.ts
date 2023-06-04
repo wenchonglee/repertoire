@@ -1,9 +1,9 @@
-import { prisma } from "@/lib/db";
+import { PAGE_SIZE, prisma } from "@/lib/db";
 import type { PlaywrightRuns } from "@prisma/client";
+import { emitter } from "../events/emitter";
 import { RunPostRequest } from "./models";
 
 export type RunResponse = PlaywrightRuns;
-const PAGE_SIZE = 2;
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -84,6 +84,8 @@ export async function POST(request: Request) {
         data: requestBody.tests.map((test) => ({ ...test, runId: requestBody.runId })),
       }),
     ]);
+
+    emitter.emit("RUN_STARTED", requestBody.runId, requestBody.startTime);
   }
 
   return new Response(JSON.stringify(run), {

@@ -1,8 +1,14 @@
+"use client";
+
 import { Button } from "@/components/Button";
+import { Spinner } from "@/components/Spinner";
 import { Table } from "@/components/Table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/Tooltip";
+import { PAGE_SIZE } from "@/lib/db/constants";
 import type { PlaywrightOutcome } from "@prisma/client";
 import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
+import relativeTime from "dayjs/plugin/relativeTime";
 import {
   CheckCircle2,
   ChevronLeft,
@@ -14,25 +20,62 @@ import {
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
-import type { ReactNode } from "react";
-import type { RunResponse } from "./api/runs/route";
+import { useEffect, useState, type ReactNode } from "react";
+import { type RunResponse } from "./api/runs/route";
 
-const getData = async (page: number): Promise<{ totalCount: number; runs: RunResponse[] }> => {
-  const searchParams = new URLSearchParams({ page: `${page}` }).toString();
-  const res = await fetch("http://localhost:3000/api/runs?" + searchParams);
+dayjs.extend(relativeTime);
+dayjs.extend(duration);
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch data");
-  }
-
-  return await res.json();
+type LatestRunsProps = {
+  data: { totalCount: number; runs: RunResponse[] };
+  pageNumber: number;
 };
 
-export default async function LatestRuns({ page }: { page?: string }) {
-  const pageNumber = page ? Number(page) : 1;
-  const data = await getData(pageNumber);
+export default function LatestRuns(props: LatestRunsProps) {
+  const { data, pageNumber } = props;
+  const totalPages = Math.ceil(data.totalCount / PAGE_SIZE);
 
-  const totalPages = Math.ceil(data.totalCount / 2);
+  const [runs, setRuns] = useState(data.runs);
+  console.log(data);
+
+  useEffect(() => {
+    const evtSource = new EventSource("http://localhost:3000/api/events/runs");
+
+    evtSource.onmessage = (ev) => {
+      try {
+        const updatedResults = JSON.parse(ev.data);
+
+        switch (updatedResults.event) {
+          case "RUN_UPDATED":
+            setRuns((prev) =>
+              prev.map((run) => {
+                if (run.runId === updatedResults.runId) return { ...run, results: updatedResults.results };
+
+                return run;
+              })
+            );
+            break;
+
+          case "RUN_STARTED":
+            console.log("RUN STARTED!", {
+              runId: updatedResults.runId,
+              startTime: updatedResults.startTime,
+            });
+            setRuns((prev) => [
+              {
+                runId: updatedResults.runId,
+                startTime: updatedResults.startTime,
+              } as any,
+              ...prev,
+            ]);
+            break;
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+    };
+    return () => evtSource.close();
+  }, []);
 
   return (
     <>
@@ -41,15 +84,13 @@ export default async function LatestRuns({ page }: { page?: string }) {
           <Table.Row>
             <Table.Head>Status</Table.Head>
             <Table.Head>Run ID</Table.Head>
-            <Table.Head>Start Time</Table.Head>
+            <Table.Head>Start Date</Table.Head>
             <Table.Head>Duration</Table.Head>
-            <Table.Head>Test of tests</Table.Head>
-            <Table.Head>Shards</Table.Head>
           </Table.Row>
         </Table.Header>
 
         <Table.Body>
-          {data.runs.map((row, index) => {
+          {runs.map((row, index) => {
             const duration = !!row.endTime
               ? dayjs.duration(dayjs(row.endTime).diff(dayjs(row.startTime))).format("HH:mm:ss")
               : null;
@@ -65,13 +106,17 @@ export default async function LatestRuns({ page }: { page?: string }) {
                   </div>
                 </Table.Cell>
                 <Table.Cell>
-                  <Link href={`/runs/${row.runId}`}>{row.runId} </Link>
+                  <Link
+                    prefetch={false} // TODO revisit this
+                    href={`/runs/${row.runId}`}
+                  >
+                    {row.runId}
+                  </Link>
                 </Table.Cell>
                 <Table.Cell title={dayjs(row.startTime).format("DD MMM YYYY")}>
                   {dayjs(row.startTime).fromNow()}
                 </Table.Cell>
-                <Table.Cell>{duration}</Table.Cell>
-                <Table.Cell>{row.totalShards}</Table.Cell>
+                <Table.Cell>{duration ?? <Spinner />}</Table.Cell>
               </Table.Row>
             );
           })}
@@ -123,7 +168,11 @@ const PaginateButton = ({ isDisabled, link, children }: { isDisabled: boolean; l
     return button;
   }
 
-  return <Link href={link}>{button}</Link>;
+  return (
+    <Link prefetch={false} href={link}>
+      {button}
+    </Link>
+  );
 };
 const renderIcon = (status: PlaywrightOutcome) => {
   switch (status) {

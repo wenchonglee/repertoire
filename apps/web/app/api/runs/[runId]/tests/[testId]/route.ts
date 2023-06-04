@@ -1,3 +1,4 @@
+import { emitter } from "@/app/api/events/emitter";
 import { prisma } from "@/lib/db";
 import { TestPutRequest } from "./models";
 
@@ -13,6 +14,7 @@ export async function PUT(request: Request, { params }: { params: { runId: strin
     },
     data: requestBody,
   });
+  emitter.emit("RUN_UPDATED", params.runId, params.testId);
 
   return new Response(JSON.stringify(test), {
     status: 201,
