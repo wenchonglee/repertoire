@@ -17,6 +17,7 @@ import {
   ChevronsRight,
   Dices,
   SkipForward,
+  TestTube2,
   XCircle,
 } from "lucide-react";
 import Link from "next/link";
@@ -80,10 +81,11 @@ export default function LatestRuns(props: LatestRunsProps) {
       <Table>
         <Table.Header>
           <Table.Row>
-            <Table.Head>Status</Table.Head>
             <Table.Head>Run ID</Table.Head>
             <Table.Head>Start Date</Table.Head>
             <Table.Head>Duration</Table.Head>
+            <Table.Head>Status</Table.Head>
+            <Table.Head>Actions</Table.Head>
           </Table.Row>
         </Table.Header>
 
@@ -95,6 +97,11 @@ export default function LatestRuns(props: LatestRunsProps) {
 
             return (
               <Table.Row key={index}>
+                <Table.Cell>{row.runId}</Table.Cell>
+                <Table.Cell title={dayjs(row.startTime).format("DD MMM YYYY")}>
+                  {dayjs(row.startTime).fromNow()}
+                </Table.Cell>
+                <Table.Cell>{duration ?? <Spinner />}</Table.Cell>
                 <Table.Cell>
                   <div className="flex gap-5">
                     <RunStatus status="expected" count={row.results?.expected} />
@@ -108,13 +115,12 @@ export default function LatestRuns(props: LatestRunsProps) {
                     prefetch={false} // TODO revisit this
                     href={`/runs/${row.runId}`}
                   >
-                    {row.runId}
+                    <Button>
+                      <TestTube2 className="mr-2 h-4 w-4" />
+                      View results
+                    </Button>
                   </Link>
                 </Table.Cell>
-                <Table.Cell title={dayjs(row.startTime).format("DD MMM YYYY")}>
-                  {dayjs(row.startTime).fromNow()}
-                </Table.Cell>
-                <Table.Cell>{duration ?? <Spinner />}</Table.Cell>
               </Table.Row>
             );
           })}
@@ -208,7 +214,7 @@ export const RunStatus = (props: { status: PlaywrightOutcome; count?: number }) 
   return (
     <TooltipProvider>
       <Tooltip delayDuration={150}>
-        <TooltipTrigger>
+        <TooltipTrigger asChild>
           <div className="flex gap-1 items-center font-medium">
             {renderIcon(props.status)}
             {props.count}

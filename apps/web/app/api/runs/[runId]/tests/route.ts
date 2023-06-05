@@ -9,7 +9,11 @@ export type TestResponse = z.infer<typeof TestPostRequest> &
 
 export async function GET(request: Request, { params }: { params: { runId: string } }) {
   const tests = await prisma.playwrightTests.aggregateRaw({
-    pipeline: [{ $match: { runId: params.runId } }, { $group: { _id: "$fileName", tests: { $push: "$$ROOT" } } }],
+    pipeline: [
+      { $match: { runId: params.runId } },
+      { $sort: { title: 1 } },
+      { $group: { _id: "$fileName", tests: { $push: "$$ROOT" } } },
+    ],
     options: {},
   });
 

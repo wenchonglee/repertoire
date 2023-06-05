@@ -1,6 +1,26 @@
 import { prisma } from "@/lib/db";
 import { RunPutRequest } from "./models";
 
+type RouteParams = {
+  params: { runId: string };
+};
+
+export async function GET(_request: Request, { params }: RouteParams) {
+  const run = await prisma.playwrightRuns.findUnique({
+    where: {
+      runId: params.runId,
+    },
+  });
+
+  return new Response(JSON.stringify(run), {
+    status: 200,
+    headers: {
+      "content-type": "application/json",
+      "cache-control": "no-cache",
+    },
+  });
+}
+
 export const getCurrentRunResults = async (runId: string) => {
   const testOutcomes = await prisma.playwrightTests.groupBy({
     by: ["outcome"],
@@ -20,7 +40,7 @@ export const getCurrentRunResults = async (runId: string) => {
   return results;
 };
 
-export async function PUT(request: Request, { params }: { params: { runId: string } }) {
+export async function PUT(request: Request, { params }: RouteParams) {
   const requestBody = RunPutRequest.parse(await request.json());
   const results = await getCurrentRunResults(params.runId);
 

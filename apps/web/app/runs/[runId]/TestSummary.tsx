@@ -1,5 +1,6 @@
 import type { TestResponse } from "@/app/api/runs/[runId]/tests/route";
 import { Card } from "@/components/Card";
+import clsx from "clsx";
 import dayjs from "dayjs";
 import { AlertCircle, CheckCircle2, SkipForward, TimerOff, XCircle } from "lucide-react";
 
@@ -31,7 +32,13 @@ export default async function TestSummary(props: { runId: string }) {
                   : null;
 
                 return (
-                  <div key={row.testId} className="flex gap-2 items-center">
+                  <div
+                    key={row.testId}
+                    className={clsx({
+                      "flex gap-2 items-center": true,
+                      "text-muted-foreground": row.status === "skipped",
+                    })}
+                  >
                     <TestStatusIcon status={row.status} />
 
                     <div>{row.title}</div>
