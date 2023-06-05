@@ -34,9 +34,11 @@ type LatestRunsProps = {
 export default function LatestRuns(props: LatestRunsProps) {
   const { data, pageNumber } = props;
   const totalPages = Math.ceil(data.totalCount / PAGE_SIZE);
-
   const [runs, setRuns] = useState(data.runs);
-  console.log(data);
+
+  useEffect(() => {
+    setRuns(data.runs);
+  }, [data]);
 
   useEffect(() => {
     const evtSource = new EventSource("http://localhost:3000/api/events/runs");
@@ -57,10 +59,6 @@ export default function LatestRuns(props: LatestRunsProps) {
             break;
 
           case "RUN_STARTED":
-            console.log("RUN STARTED!", {
-              runId: updatedResults.runId,
-              startTime: updatedResults.startTime,
-            });
             setRuns((prev) => [
               {
                 runId: updatedResults.runId,
