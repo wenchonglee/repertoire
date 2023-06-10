@@ -1,8 +1,10 @@
 import type { TestResponse } from "@/app/api/runs/[runId]/tests/route";
 import { Card } from "@/components/Card";
+import { ProjectBadge } from "@/components/ProjectBadge";
+import { formatDuration } from "@/lib/utils/formatDuration";
 import clsx from "clsx";
-import dayjs from "dayjs";
 import { AlertCircle, CheckCircle2, SkipForward, TimerOff, XCircle } from "lucide-react";
+import Link from "next/link";
 
 const getData = async (runId: string): Promise<{ _id: string; tests: TestResponse[] }[]> => {
   const res = await fetch(`http://localhost:3000/api/runs/${runId}/tests`);
@@ -27,9 +29,7 @@ export default async function TestSummary(props: { runId: string }) {
             </Card.Header>
             <Card.Content>
               {file.tests.map((row) => {
-                const duration = !!row.endTime
-                  ? dayjs.duration(dayjs(row.endTime?.$date).diff(dayjs(row.startTime?.$date))).format("mm:ss")
-                  : null;
+                const duration = formatDuration(row.startTime?.$date, row.endTime?.$date);
 
                 return (
                   <div
@@ -41,8 +41,10 @@ export default async function TestSummary(props: { runId: string }) {
                   >
                     <TestStatusIcon status={row.status} />
 
-                    <div>{row.title}</div>
-                    <div>{row.projectName}</div>
+                    <Link href={`/runs/${props.runId}/tests/${row.testId}`}>
+                      <div>{row.title}</div>
+                    </Link>
+                    <ProjectBadge>{row.projectName}</ProjectBadge>
                     <div>{duration}</div>
                   </div>
                 );

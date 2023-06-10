@@ -1,6 +1,6 @@
 import { RunStatus } from "@/app/LatestRuns";
 import type { RunResponse } from "@/app/api/runs/route";
-import dayjs from "dayjs";
+import { formatDuration } from "@/lib/utils/formatDuration";
 import { AlarmClock } from "lucide-react";
 import TestSummary from "./TestSummary";
 
@@ -16,9 +16,8 @@ const getData = async (runId: string): Promise<RunResponse> => {
 
 export default async function RunPage({ params }: { params: { runId: string } }) {
   const data = await getData(params.runId);
-  const duration = !!data.endTime
-    ? dayjs.duration(dayjs(data.endTime).diff(dayjs(data.startTime))).format("mm:ss")
-    : null;
+  const duration = formatDuration(data.startTime, data.endTime);
+
   return (
     <main className="mx-auto max-w-screen-xl">
       <div className="flex-1 space-y-4 p-8 pt-6">

@@ -113,7 +113,7 @@ const reportTestEnd = async (test: TestCase, result: TestResult, context: APIReq
       data: {
         endTime: new Date().toISOString(),
         outcome: test.outcome(),
-        errors: JSON.stringify(result.errors),
+        errors: result.errors,
         status: result.status,
         expectedStatus: test.expectedStatus,
       },

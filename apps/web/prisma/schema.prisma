@@ -67,7 +67,7 @@ model PlaywrightTests {
 
   // Added attributes on test end
   status  PlaywrightTestStatus?
-  errors  String?
+  errors  Error[]
   endTime DateTime?
 
   @@unique([runId, testId])
@@ -91,4 +91,18 @@ enum PlaywrightTestStatus {
   timedOut
   skipped
   interrupted
+}
+
+type Error {
+  message  String?
+  snippet  String?
+  stack    String?
+  value    String?
+  location ErrorLocation?
+}
+
+type ErrorLocation {
+  column Int
+  file   String
+  line   Int
 }

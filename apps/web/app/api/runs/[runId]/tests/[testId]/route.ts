@@ -2,6 +2,24 @@ import { emitter } from "@/app/api/events/emitter";
 import { prisma } from "@/lib/db";
 import { TestPutRequest } from "./models";
 
+export async function GET(request: Request, { params }: { params: { runId: string; testId: string } }) {
+  const test = await prisma.playwrightTests.findUnique({
+    where: {
+      runId_testId: {
+        runId: params.runId,
+        testId: params.testId,
+      },
+    },
+  });
+
+  return new Response(JSON.stringify(test), {
+    status: 201,
+    headers: {
+      "content-type": "application/json",
+    },
+  });
+}
+
 export async function PUT(request: Request, { params }: { params: { runId: string; testId: string } }) {
   const requestBody = TestPutRequest.parse(await request.json());
 

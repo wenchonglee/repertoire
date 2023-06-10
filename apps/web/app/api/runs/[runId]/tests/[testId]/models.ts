@@ -6,5 +6,20 @@ export const TestPutRequest = z.object({
   outcome: z.enum(["skipped", "expected", "unexpected", "flaky"]).optional(),
   status: z.enum(["passed", "failed", "timedOut", "skipped", "interrupted"]).optional(),
   expectedStatus: z.enum(["passed", "failed", "timedOut", "skipped", "interrupted"]).optional(),
-  errors: z.string().nullish(),
+  errors: z
+    .object({
+      message: z.string().optional(),
+      snippet: z.string().optional(),
+      stack: z.string().optional(),
+      value: z.string().optional(),
+      location: z
+        .object({
+          column: z.number(),
+          file: z.string(),
+          line: z.number(),
+        })
+        .optional(),
+    })
+    .array()
+    .default([]),
 });
