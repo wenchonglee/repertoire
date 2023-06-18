@@ -15,6 +15,7 @@ const getData = async (runId: string, testId: string): Promise<TestResponse> => 
 
 export default async function RunPage({ params }: { params: { runId: string; testId: string } }) {
   const data = await getData(params.runId, params.testId);
+  console.log(data);
   const duration = formatDuration(data.startTime, data.endTime);
 
   return (
@@ -28,9 +29,19 @@ export default async function RunPage({ params }: { params: { runId: string; tes
         <div className="text-xl text-muted-foreground">{data.fileName}</div>
         <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">{data.title}</h3>
         <ProjectBadge>{data.projectName}</ProjectBadge>
-        {data.errors?.map((error) => (
-          <Errors error={error.message ?? ""} />
+        {data.errors?.map((error, index) => (
+          <Errors key={index} error={error.message ?? ""} />
         ))}
+      </div>
+
+      <div>
+        {data.attachments?.map((attachment) => {
+          if (attachment.contentType.includes("image")) {
+            // eslint-disable-next-line @next/next/no-img-element
+            return <img key={attachment.fileName} src={attachment.url} alt={attachment.fileName} className="h-96" />;
+          }
+          return <video key={attachment.fileName} src={attachment.fileName} />;
+        })}
       </div>
     </main>
   );

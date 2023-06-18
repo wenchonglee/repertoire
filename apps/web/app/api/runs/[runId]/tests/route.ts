@@ -4,13 +4,17 @@ import type { TestPutRequest } from "./[testId]/models";
 import type { TestPostRequest } from "./models";
 
 // TODO: double check if there is a way to avoid the $date cast by aggregateRaw
-export type TestResponse = z.infer<typeof TestPostRequest> &
-  z.infer<typeof TestPutRequest> & {
-    startTime: { $date: string };
-    endTime: { $date: string };
-    projectName: string;
+export type TestResponse = z.infer<typeof TestPostRequest> & {
+  startTime: { $date: string };
+  endTime: { $date: string };
+  projectName: string;
+  fileName: string;
+  attachments: {
     fileName: string;
-  };
+    url: string;
+    contentType: string;
+  }[];
+} & z.infer<typeof TestPutRequest>;
 
 export async function GET(request: Request, { params }: { params: { runId: string } }) {
   const tests = await prisma.playwrightTests.aggregateRaw({

@@ -22,4 +22,11 @@ export const TestPutRequest = z.object({
     })
     .array()
     .default([]),
+  attachments: z
+    .object({
+      fileName: z.string(),
+      contentType: z.string(),
+    })
+    .array()
+    .optional(),
 });

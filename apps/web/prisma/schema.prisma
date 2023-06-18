@@ -70,6 +70,8 @@ model PlaywrightTests {
   errors  Error[]
   endTime DateTime?
 
+  attachments Attachment[]
+
   @@unique([runId, testId])
 }
 
@@ -105,4 +107,10 @@ type ErrorLocation {
   column Int
   file   String
   line   Int
+}
+
+type Attachment {
+  fileName    String
+  url         String
+  contentType String
 }

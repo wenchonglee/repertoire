@@ -30,7 +30,21 @@ export async function PUT(request: Request, { params }: { params: { runId: strin
         testId: params.testId,
       },
     },
-    data: requestBody,
+    data: {
+      ...requestBody,
+      attachments: requestBody.attachments?.map((attachment) => {
+        let fileName = attachment.fileName;
+        if (fileName.split(".").length === 1) {
+          fileName = fileName + "." + attachment.contentType.split("/").pop();
+        }
+
+        return {
+          fileName,
+          url: "http://localhost:9000/repertoire/" + params.runId + "/" + params.testId + "/" + fileName,
+          contentType: attachment.contentType,
+        };
+      }),
+    },
   });
   emitter.emit("RUN_UPDATED", params.runId, params.testId);
 

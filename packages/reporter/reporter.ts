@@ -1,6 +1,8 @@
 import { APIRequestContext, request } from "@playwright/test";
 import { FullConfig, FullResult, Reporter, Suite, TestCase, TestResult } from "@playwright/test/reporter";
+import fs from "node:fs";
 import path from "node:path";
+import { buffer } from "node:stream/consumers";
 import { simpleHash } from "./simpleHash";
 
 const RUN_ID = simpleHash(new Date().toISOString());
@@ -116,11 +118,36 @@ const reportTestEnd = async (test: TestCase, result: TestResult, context: APIReq
         errors: result.errors,
         status: result.status,
         expectedStatus: test.expectedStatus,
+        attachments: result.attachments.map((attachment) => ({
+          fileName: attachment.name,
+          contentType: attachment.contentType,
+        })),
       },
       headers: { "content-type": "application/json" },
     });
   } catch (err) {
     console.log(err);
+  }
+};
+
+const uploadFiles = async (testResult: TestResult, test: TestCase, context: APIRequestContext) => {
+  for (const attachment of testResult.attachments) {
+    try {
+      const fileData = fs.createReadStream(attachment.path);
+
+      // TODO: may need to use Promise.all and also wait for all uploads to complete before reporter exits
+      const response = await context.post(`./runs/${RUN_ID}/tests/${test.id}/attachments`, {
+        multipart: {
+          files: {
+            buffer: await buffer(fileData),
+            name: attachment.name,
+            mimeType: attachment.contentType,
+          },
+        },
+      });
+    } catch (error) {
+      console.error("An error occurred:", error);
+    }
   }
 };
 
@@ -148,6 +175,9 @@ class MyReporter implements Reporter {
   onTestEnd(test: TestCase, result: TestResult) {
     console.log(`Finished test ${test.title}: ${result.status}`);
     reportTestEnd(test, result, this.context);
+
+    console.log(`Uploading files: ${result.attachments.map((attachment) => attachment.name).join(", ")}`);
+    uploadFiles(result, test, this.context);
   }
 
   async onEnd(result: FullResult) {
