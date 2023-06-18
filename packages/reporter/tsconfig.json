@@ -1,6 +1,12 @@
 {
   "compilerOptions": {
+    "target": "ES2020",
     "types": ["node"],
-    "esModuleInterop": true
-  }
+    "strict": true,
+    "esModuleInterop": true,
+    "moduleResolution": "Node",
+    "outDir": "dist",
+    "declaration": true
+  },
+  "include": ["src/**/*"]
 }
