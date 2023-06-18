@@ -1,5 +1,6 @@
 import { emitter } from "@/app/api/events/emitter";
 import { prisma } from "@/lib/db";
+import { getTest } from "./getTest";
 import { TestPutRequest } from "./models";
 
 type RequestContext = {
@@ -14,17 +15,9 @@ type RequestContext = {
  *
  * Get a single test result
  */
-export async function GET(request: Request, context: RequestContext) {
+export async function GET(_request: Request, context: RequestContext) {
   const { params } = context;
-
-  const test = await prisma.playwrightTests.findUnique({
-    where: {
-      runId_testId: {
-        runId: params.runId,
-        testId: params.testId,
-      },
-    },
-  });
+  const test = await getTest(params.runId, params.testId);
 
   return new Response(JSON.stringify(test), {
     status: 200,

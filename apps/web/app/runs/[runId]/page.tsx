@@ -1,21 +1,16 @@
 import { RunStatus } from "@/app/LatestRuns";
-import type { RunResponse } from "@/app/api/runs/route";
+import { getRun } from "@/app/api/runs/[runId]/getRun";
 import { formatDuration } from "@/lib/utils/formatDuration";
 import { AlarmClock } from "lucide-react";
 import TestSummary from "./TestSummary";
 
-const getData = async (runId: string): Promise<RunResponse> => {
-  const res = await fetch("http://localhost:3000/api/runs/" + runId);
+export default async function RunPage({ params }: { params: { runId: string } }) {
+  const data = await getRun(params.runId);
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch data");
+  if (!data) {
+    return null;
   }
 
-  return await res.json();
-};
-
-export default async function RunPage({ params }: { params: { runId: string } }) {
-  const data = await getData(params.runId);
   const duration = formatDuration(data.startTime, data.endTime);
 
   return (

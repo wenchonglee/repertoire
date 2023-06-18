@@ -1,3 +1,4 @@
+import { getTests } from "@/app/api/runs/[runId]/tests/getTests";
 import { Card } from "@/components/Card";
 import { ProjectBadge } from "@/components/ProjectBadge";
 import { formatDuration } from "@/lib/utils/formatDuration";
@@ -6,24 +7,8 @@ import clsx from "clsx";
 import { AlertCircle, CheckCircle2, SkipForward, TimerOff, XCircle } from "lucide-react";
 import Link from "next/link";
 
-// TODO: double check if there is a way to avoid the $date cast by aggregateRaw
-export type TestResponse = {
-  startTime: { $date: string };
-  endTime: { $date: string };
-} & PlaywrightTests;
-
-const getData = async (runId: string): Promise<{ _id: string; tests: TestResponse[] }[]> => {
-  const res = await fetch(`http://localhost:3000/api/runs/${runId}/tests`);
-  if (!res.ok) {
-    throw new Error("Failed to fetch data");
-  }
-  //   await sleep(5000);
-
-  return await res.json();
-};
-
 export default async function TestSummary(props: { runId: string }) {
-  const data = await getData(props.runId);
+  const data = await getTests(props.runId);
 
   return (
     <div className="flex flex-col gap-4">
@@ -63,7 +48,7 @@ export default async function TestSummary(props: { runId: string }) {
   );
 }
 
-const TestStatusIcon = ({ status }: { status: TestResponse["status"] }) => {
+const TestStatusIcon = ({ status }: { status: PlaywrightTests["status"] }) => {
   switch (status) {
     case "failed":
       return <XCircle className="text-red-500 w-4 h-4" />;

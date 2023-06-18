@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/db";
+import { getTests } from "./getTests";
 
 type RequestContext = {
   params: {
@@ -14,14 +14,7 @@ type RequestContext = {
 export async function GET(_request: Request, context: RequestContext) {
   const { params } = context;
 
-  const tests = await prisma.playwrightTests.aggregateRaw({
-    pipeline: [
-      { $match: { runId: params.runId } },
-      { $sort: { title: 1 } },
-      { $group: { _id: "$fileName", tests: { $push: "$$ROOT" } } },
-    ],
-    options: {},
-  });
+  const tests = await getTests(params.runId);
 
   return new Response(JSON.stringify(tests), {
     status: 200,

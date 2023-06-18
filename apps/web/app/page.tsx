@@ -1,20 +1,9 @@
-import type { RunResponse } from "./api/runs/route";
+import { getRuns } from "./api/runs/getRuns";
 import LatestRuns from "./LatestRuns";
-
-const getData = async (page: number): Promise<{ totalCount: number; runs: RunResponse[] }> => {
-  const searchParams = new URLSearchParams({ page: `${page}` }).toString();
-  const res = await fetch("http://localhost:3000/api/runs?" + searchParams);
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch data");
-  }
-
-  return await res.json();
-};
 
 export default async function Home(request: { searchParams: Record<string, string> }) {
   const pageNumber = request.searchParams.page ? Number(request.searchParams.page) : 1;
-  const data = await getData(pageNumber);
+  const data = await getRuns(pageNumber);
 
   return (
     <main className="mx-auto max-w-screen-xl">

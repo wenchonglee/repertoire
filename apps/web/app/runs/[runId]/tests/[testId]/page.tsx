@@ -1,21 +1,12 @@
+import { getTest } from "@/app/api/runs/[runId]/tests/[testId]/getTest";
 import { ProjectBadge } from "@/components/ProjectBadge";
 import { formatDuration } from "@/lib/utils/formatDuration";
-import type { PlaywrightTests } from "@prisma/client";
 import { Errors } from "./Errors";
 
-const getData = async (runId: string, testId: string): Promise<PlaywrightTests> => {
-  const res = await fetch(`http://localhost:3000/api/runs/${runId}/tests/${testId}`);
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch data");
-  }
-
-  return await res.json();
-};
-
 export default async function RunPage({ params }: { params: { runId: string; testId: string } }) {
-  const data = await getData(params.runId, params.testId);
-  console.log(data);
+  const data = await getTest(params.runId, params.testId);
+  if (!data) return null;
+
   const duration = formatDuration(data.startTime, data.endTime);
 
   return (

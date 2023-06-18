@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { getCurrentRunResults } from "./getCurrentRunResults";
+import { getRun } from "./getRun";
 import { RunPutRequest } from "./models";
 
 type RequestContext = {
@@ -13,11 +14,7 @@ type RequestContext = {
  */
 export async function GET(_request: Request, context: RequestContext) {
   const { params } = context;
-  const run = await prisma.playwrightRuns.findUnique({
-    where: {
-      runId: params.runId,
-    },
-  });
+  const run = await getRun(params.runId);
 
   return new Response(JSON.stringify(run), {
     status: 200,

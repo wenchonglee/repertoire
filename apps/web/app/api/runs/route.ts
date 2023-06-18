@@ -1,6 +1,7 @@
-import { PAGE_SIZE, prisma } from "@/lib/db";
+import { prisma } from "@/lib/db";
 import type { PlaywrightRuns } from "@prisma/client";
 import { emitter } from "../events/emitter";
+import { getRuns } from "./getRuns";
 import { RunPostRequest } from "./models";
 
 export type RunResponse = PlaywrightRuns;
@@ -14,19 +15,9 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page = searchParams.get("page");
 
-  const [totalCount, runs] = await prisma.$transaction([
-    prisma.playwrightRuns.count(),
-    prisma.playwrightRuns.findMany({
-      take: PAGE_SIZE,
-      // page is 1-indexed to clients
-      skip: page ? (Number(page) - 1) * PAGE_SIZE : 0,
-      orderBy: {
-        startTime: "desc",
-      },
-    }),
-  ]);
+  const runs = await getRuns(Number(page));
 
-  return new Response(JSON.stringify({ totalCount, runs }), {
+  return new Response(JSON.stringify(runs), {
     status: 200,
     headers: {
       "content-type": "application/json",
