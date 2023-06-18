@@ -1,21 +1,37 @@
-import { getCurrentRunResults } from "../../runs/[runId]/route";
+import { getCurrentRunResults } from "../../runs/[runId]/getCurrentRunResults";
 import { emitter } from "../emitter";
 
-export async function GET(request: Request) {
-  let responseStream = new TransformStream();
+/**
+ * GET /api/events/runs
+ *
+ * This is a Server Sent Event API for clients to receive updates of Runs
+ */
+export async function GET() {
+  const responseStream = new TransformStream();
   const writer = responseStream.writable.getWriter();
 
   const encoder = new TextEncoder();
 
+  // Update the client with the current state of the run when RUN_UPDATED is emitted on tests' completion
+  // TODO: throttle this
   emitter.on("RUN_UPDATED", async (runId: string, _testId: string) => {
     const results = await getCurrentRunResults(runId);
-    const runUpdatedEvent = { runId, results, event: "RUN_UPDATED" };
+    const runUpdatedEvent = {
+      event: "RUN_UPDATED",
+      runId,
+      results,
+    };
 
     writer.write(encoder.encode(`event: message\ndata: ${JSON.stringify(runUpdatedEvent)}\n\n`));
   });
 
+  // Update the client if a new test run has started
   emitter.on("RUN_STARTED", async (runId: string, startTime: string) => {
-    const runStartedEvent = { runId, startTime, event: "RUN_STARTED" };
+    const runStartedEvent = {
+      event: "RUN_STARTED",
+      runId,
+      startTime,
+    };
 
     writer.write(encoder.encode(`event: message\ndata: ${JSON.stringify(runStartedEvent)}\n\n`));
   });

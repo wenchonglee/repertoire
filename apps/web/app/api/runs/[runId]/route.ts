@@ -1,11 +1,18 @@
 import { prisma } from "@/lib/db";
+import { getCurrentRunResults } from "./getCurrentRunResults";
 import { RunPutRequest } from "./models";
 
-type RouteParams = {
+type RequestContext = {
   params: { runId: string };
 };
 
-export async function GET(_request: Request, { params }: RouteParams) {
+/**
+ * GET /api/runs/:runId
+ *
+ * Get the details of the run, which includes a numerical summary of the run
+ */
+export async function GET(_request: Request, context: RequestContext) {
+  const { params } = context;
   const run = await prisma.playwrightRuns.findUnique({
     where: {
       runId: params.runId,
@@ -21,26 +28,13 @@ export async function GET(_request: Request, { params }: RouteParams) {
   });
 }
 
-export const getCurrentRunResults = async (runId: string) => {
-  const testOutcomes = await prisma.playwrightTests.groupBy({
-    by: ["outcome"],
-    where: {
-      runId,
-    },
-    _count: {
-      outcome: true,
-    },
-  });
-
-  const results: Record<string, number> = {};
-  testOutcomes.forEach((element) => {
-    if (element.outcome) results[element.outcome] = element._count.outcome;
-  });
-
-  return results;
-};
-
-export async function PUT(request: Request, { params }: RouteParams) {
+/**
+ * PUT /api/runs/:runId
+ *
+ * Update the run, this is only used when the run is sharded
+ */
+export async function PUT(request: Request, context: RequestContext) {
+  const { params } = context;
   const requestBody = RunPutRequest.parse(await request.json());
   const results = await getCurrentRunResults(params.runId);
 
@@ -49,13 +43,14 @@ export async function PUT(request: Request, { params }: RouteParams) {
     where: {
       runId: params.runId,
     },
-    data: { ...requestBody, results },
+    data: {
+      ...requestBody,
+      results,
+    },
   });
 
   return new Response(JSON.stringify(run), {
     status: 200,
-    headers: {
-      "content-type": "application/json",
-    },
+    headers: { "content-type": "application/json" },
   });
 }

@@ -1,9 +1,9 @@
-import type { TestResponse } from "@/app/api/runs/[runId]/tests/route";
 import { ProjectBadge } from "@/components/ProjectBadge";
 import { formatDuration } from "@/lib/utils/formatDuration";
+import type { PlaywrightTests } from "@prisma/client";
 import { Errors } from "./Errors";
 
-const getData = async (runId: string, testId: string): Promise<TestResponse> => {
+const getData = async (runId: string, testId: string): Promise<PlaywrightTests> => {
   const res = await fetch(`http://localhost:3000/api/runs/${runId}/tests/${testId}`);
 
   if (!res.ok) {

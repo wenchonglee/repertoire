@@ -1,6 +1,20 @@
 import { minioClient } from "@/lib/minio";
 
-export async function POST(request: Request, { params }: { params: { runId: string; testId: string } }) {
+type RequestContext = {
+  params: {
+    runId: string;
+    testId: string;
+  };
+};
+
+/**
+ * POST /api/runs/:runId/tests/:testId/attachments
+ *
+ * Upload a single file for the test, the filename and content type must be set appropriately
+ */
+export async function POST(request: Request, context: RequestContext) {
+  const { params } = context;
+
   const formData = await request.formData();
   const files = formData.get("files") as Blob | null;
 
@@ -13,12 +27,12 @@ export async function POST(request: Request, { params }: { params: { runId: stri
       fileName = fileName + "." + files.type.split("/").pop();
     }
 
-    // * may need to await?
+    // TODO: may need to await?
     minioClient.putObject("repertoire", `${params.runId}/${params.testId}/${fileName}`, buffer);
   }
 
   return new Response("File uploaded", {
-    status: 200,
+    status: 201,
     headers: { "content-type": "application/json" },
   });
 }

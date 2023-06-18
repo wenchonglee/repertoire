@@ -1,10 +1,16 @@
-import type { TestResponse } from "@/app/api/runs/[runId]/tests/route";
 import { Card } from "@/components/Card";
 import { ProjectBadge } from "@/components/ProjectBadge";
 import { formatDuration } from "@/lib/utils/formatDuration";
+import type { PlaywrightTests } from "@prisma/client";
 import clsx from "clsx";
 import { AlertCircle, CheckCircle2, SkipForward, TimerOff, XCircle } from "lucide-react";
 import Link from "next/link";
+
+// TODO: double check if there is a way to avoid the $date cast by aggregateRaw
+export type TestResponse = {
+  startTime: { $date: string };
+  endTime: { $date: string };
+} & PlaywrightTests;
 
 const getData = async (runId: string): Promise<{ _id: string; tests: TestResponse[] }[]> => {
   const res = await fetch(`http://localhost:3000/api/runs/${runId}/tests`);

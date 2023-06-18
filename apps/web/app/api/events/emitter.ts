@@ -1,5 +1,7 @@
 import { EventEmitter } from "stream";
 
+// Emitter singleton
+
 const globalForEmitter = global as unknown as {
   emitter: EventEmitter | undefined;
 };

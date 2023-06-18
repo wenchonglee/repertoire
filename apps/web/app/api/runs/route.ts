@@ -5,6 +5,11 @@ import { RunPostRequest } from "./models";
 
 export type RunResponse = PlaywrightRuns;
 
+/**
+ * GET /api/runs
+ *
+ * List all runs
+ */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const page = searchParams.get("page");
@@ -30,6 +35,12 @@ export async function GET(request: Request) {
   });
 }
 
+/**
+ * POST /api/runs
+ *
+ * Create a new run.
+ * This is called by the reporter's onBegin hook
+ */
 export async function POST(request: Request) {
   const requestBody = RunPostRequest.parse(await request.json());
   const run = await prisma.playwrightRuns.findUnique({
@@ -39,17 +50,22 @@ export async function POST(request: Request) {
   });
 
   if (run) {
+    /**
+     * If a run already exists, then this might be sharded
+     */
     if (requestBody.shardId) {
       if (run.joinedShards.includes(requestBody.shardId)) {
         // Shard run already included, can be skipped
         return new Response("Sharded run already exists", {
           status: 409,
-          headers: {
-            "content-type": "application/json",
-          },
+          headers: { "content-type": "application/json" },
         });
       }
 
+      /**
+       * If this is a new shard run, update the run record to include this shard,
+       * then create all the tests that belong to it
+       */
       await prisma.$transaction([
         // update the run with this shard id
         prisma.playwrightRuns.update({
@@ -67,8 +83,12 @@ export async function POST(request: Request) {
       ]);
     }
   } else {
+    /**
+     * If no runs exist, then this is either the first sharded run or the only run
+     *
+     * We create a run record and all the tests that belong to it
+     */
     await prisma.$transaction([
-      // create the run
       prisma.playwrightRuns.create({
         data: {
           runId: requestBody.runId,
@@ -79,7 +99,7 @@ export async function POST(request: Request) {
           projects: requestBody.projects,
         },
       }),
-      // create all the tests of this shard
+      // create all the tests of this run/shard
       prisma.playwrightTests.createMany({
         data: requestBody.tests.map((test) => ({ ...test, runId: requestBody.runId })),
       }),
@@ -90,8 +110,6 @@ export async function POST(request: Request) {
 
   return new Response(JSON.stringify(run), {
     status: 201,
-    headers: {
-      "content-type": "application/json",
-    },
+    headers: { "content-type": "application/json" },
   });
 }

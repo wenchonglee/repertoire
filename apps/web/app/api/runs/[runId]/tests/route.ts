@@ -1,22 +1,19 @@
 import { prisma } from "@/lib/db";
-import { z } from "zod";
-import type { TestPutRequest } from "./[testId]/models";
-import type { TestPostRequest } from "./models";
 
-// TODO: double check if there is a way to avoid the $date cast by aggregateRaw
-export type TestResponse = z.infer<typeof TestPostRequest> & {
-  startTime: { $date: string };
-  endTime: { $date: string };
-  projectName: string;
-  fileName: string;
-  attachments: {
-    fileName: string;
-    url: string;
-    contentType: string;
-  }[];
-} & z.infer<typeof TestPutRequest>;
+type RequestContext = {
+  params: {
+    runId: string;
+  };
+};
 
-export async function GET(request: Request, { params }: { params: { runId: string } }) {
+/**
+ * GET /api/runs/:runId/tests
+ *
+ * Get all tests in a run, grouped by the tests' file name
+ */
+export async function GET(_request: Request, context: RequestContext) {
+  const { params } = context;
+
   const tests = await prisma.playwrightTests.aggregateRaw({
     pipeline: [
       { $match: { runId: params.runId } },
