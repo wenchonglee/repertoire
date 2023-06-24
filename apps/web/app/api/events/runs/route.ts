@@ -1,6 +1,8 @@
 import { getCurrentRunResults } from "../../runs/[runId]/getCurrentRunResults";
 import { emitter } from "../emitter";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/events/runs
  *

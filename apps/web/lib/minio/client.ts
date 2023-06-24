@@ -7,8 +7,8 @@ const globalForMinio = global as unknown as {
 export const minioClient =
   globalForMinio.minio ??
   new Client({
-    endPoint: "localhost",
-    port: 9000,
+    endPoint: process.env.MINIO_ENDPOINT as string,
+    port: process.env.MINIO_PORT as unknown as number,
     useSSL: false,
     accessKey: process.env.MINIO_ACCESS_KEY as string,
     secretKey: process.env.MINIO_SECRET_KEY as string,

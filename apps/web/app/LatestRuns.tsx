@@ -42,7 +42,7 @@ export default function LatestRuns(props: LatestRunsProps) {
   }, [data]);
 
   useEffect(() => {
-    const evtSource = new EventSource("http://localhost:3000/api/events/runs");
+    const evtSource = new EventSource(`${window.location.origin}/api/events/runs`);
 
     evtSource.onmessage = (ev) => {
       try {

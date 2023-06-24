@@ -53,7 +53,7 @@ export async function PUT(request: Request, context: RequestContext) {
 
         return {
           fileName,
-          url: "http://localhost:9000/repertoire/" + params.runId + "/" + params.testId + "/" + fileName,
+          url: `http://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/repertoire/${params.runId}/${params.testId}/${fileName}`,
           contentType: attachment.contentType,
         };
       }),
