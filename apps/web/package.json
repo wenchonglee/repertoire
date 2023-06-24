@@ -10,7 +10,7 @@
     "prisma:push": "prisma db push"
   },
   "dependencies": {
-    "@prisma/client": "4.14.1",
+    "@prisma/client": "4.16.1",
     "@radix-ui/react-slot": "1.0.2",
     "@radix-ui/react-tooltip": "1.0.6",
     "ansi-to-html": "0.7.2",
@@ -19,7 +19,7 @@
     "dayjs": "1.11.7",
     "lucide-react": "0.221.0",
     "minio": "7.1.1",
-    "next": "13.4.3",
+    "next": "13.4.7",
     "prisma": "4.14.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -33,7 +33,7 @@
     "@types/react-dom": "18.2.4",
     "autoprefixer": "10.4.14",
     "eslint": "8.41.0",
-    "eslint-config-next": "13.4.3",
+    "eslint-config-next": "13.4.7",
     "postcss": "8.4.23",
     "tailwindcss": "3.3.2"
   }
