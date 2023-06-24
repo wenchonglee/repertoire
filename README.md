@@ -22,6 +22,8 @@ Create a `.env` file in `apps/web` with the following string
 DATABASE_URL="mongodb://localhost:27017/repertoire?directConnection=true"
 MINIO_ACCESS_KEY="YOUR_ACCESS_KEY"
 MINIO_SECRET_KEY="YOUR_SECRET_KEY"
+MINIO_ENDPOINT="localhost"
+MINIO_PORT="9000"
 ```
 
 Now you should be able to run `pnpm dev` in the root directory and run tests in the `packages/reporter` folder

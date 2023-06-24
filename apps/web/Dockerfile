@@ -27,6 +27,7 @@ RUN pnpm install --frozen-lockfile
 # Build the project
 COPY --from=builder /app/out/full/ .
 ENV NEXT_TELEMETRY_DISABLED 1
+ENV DATABASE_URL=""
 RUN cd apps/web && yarn run prisma:generate
 RUN yarn turbo run build --filter=web...
 

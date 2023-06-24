@@ -27,10 +27,11 @@ export default async function RunPage({ params }: { params: { runId: string } })
 
         <div className="flex gap-4">
           <div className="flex gap-5">
-            <RunStatus status="expected" count={data.results?.expected} />
-            <RunStatus status="unexpected" count={data.results?.unexpected} />
-            <RunStatus status="skipped" count={data.results?.skipped} />
-            <RunStatus status="flaky" count={data.results?.flaky} />
+            {/* ! Not sure why prisma is typing this incorrectly */}
+            <RunStatus status="expected" count={(data.results as any)?.expected} />
+            <RunStatus status="unexpected" count={(data.results as any)?.unexpected} />
+            <RunStatus status="skipped" count={(data.results as any)?.skipped} />
+            <RunStatus status="flaky" count={(data.results as any)?.flaky} />
           </div>
 
           <div className="flex gap-1 items-center ">
