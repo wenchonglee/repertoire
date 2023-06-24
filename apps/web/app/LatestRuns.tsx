@@ -105,10 +105,10 @@ export default function LatestRuns(props: LatestRunsProps) {
                 <Table.Cell>
                   <div className="flex gap-5">
                     {/* ! Not sure why prisma is typing this incorrectly */}
-                    <RunStatus status="expected" count={(row.results as any)?.expected} />
-                    <RunStatus status="unexpected" count={(row.results as any)?.unexpected} />
-                    <RunStatus status="skipped" count={(row.results as any)?.skipped} />
-                    <RunStatus status="flaky" count={(row.results as any)?.flaky} />
+                    <RunStatus status="expected" count={row.results?.expected} />
+                    <RunStatus status="unexpected" count={row.results?.unexpected} />
+                    <RunStatus status="skipped" count={row.results?.skipped} />
+                    <RunStatus status="flaky" count={row.results?.flaky} />
                   </div>
                 </Table.Cell>
                 <Table.Cell>

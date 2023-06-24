@@ -10,7 +10,7 @@
     "prisma:push": "prisma db push"
   },
   "dependencies": {
-    "@prisma/client": "4.16.1",
+    "@prisma/client": "4.14.1",
     "@radix-ui/react-slot": "1.0.2",
     "@radix-ui/react-tooltip": "1.0.6",
     "ansi-to-html": "0.7.2",
