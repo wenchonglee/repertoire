@@ -31,7 +31,11 @@ export default async function RunPage({ params }: { params: { runId: string; tes
             // eslint-disable-next-line @next/next/no-img-element
             return <img key={attachment.fileName} src={attachment.url} alt={attachment.fileName} className="h-96" />;
           }
-          return <video key={attachment.fileName} src={attachment.fileName} />;
+          return (
+            <video key={attachment.fileName} controls>
+              <source src={attachment.url} type={attachment.contentType} />
+            </video>
+          );
         })}
       </div>
     </main>

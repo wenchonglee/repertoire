@@ -1,0 +1,56 @@
+services:
+  repertoire:
+    image: wenchonglee/repertoire:0.0.1-beta
+    ports:
+      - 3000:3000
+    environment:
+      # mongo doesn't get resolved correctly, but host.docker.internal works
+      - DATABASE_URL=mongodb://host.docker.internal:27017/repertoire?directConnection=true
+      - MINIO_ACCESS_KEY=ROOTUSER
+      - MINIO_SECRET_KEY=CHANGEME123
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_PUBLIC_ENDPOINT=http://localhost:9000
+    depends_on:
+      - mongo
+      - minio
+    networks:
+      - shared
+    restart: on-failure
+
+  mongo:
+    image: bitnami/mongodb:6.0.6
+    environment:
+      # replicaset required 
+      - MONGODB_REPLICA_SET_MODE=primary
+      - ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo:/data/db
+    networks:
+      - shared
+    restart: on-failure
+
+  minio:
+    image: bitnami/minio
+    environment:
+      - MINIO_ROOT_USER=ROOTUSER
+      - MINIO_ROOT_PASSWORD=CHANGEME123
+      - MINIO_DEFAULT_BUCKETS=repertoire:public
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio:/data
+    networks:
+      - shared
+    restart: on-failure
+
+networks:
+  shared:
+    driver: bridge
+
+volumes:
+  mongo:
+  minio:

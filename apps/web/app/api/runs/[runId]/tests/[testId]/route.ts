@@ -44,7 +44,7 @@ export async function PUT(request: Request, context: RequestContext) {
     },
     data: {
       ...requestBody,
-      // TODO: find a better way to patch the url
+      // TODO: making assumptions and persisting the url probably isn't a good idea, to redesign
       attachments: requestBody.attachments?.map((attachment) => {
         let fileName = attachment.fileName;
         if (fileName.split(".").length === 1) {
@@ -53,7 +53,7 @@ export async function PUT(request: Request, context: RequestContext) {
 
         return {
           fileName,
-          url: `http://${process.env.MINIO_ENDPOINT}:${process.env.MINIO_PORT}/repertoire/${params.runId}/${params.testId}/${fileName}`,
+          url: `${process.env.MINIO_PUBLIC_ENDPOINT}/repertoire/${params.runId}/${params.testId}/${fileName}`,
           contentType: attachment.contentType,
         };
       }),
