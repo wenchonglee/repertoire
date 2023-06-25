@@ -1,6 +1,6 @@
 {
   "name": "repertoire-reporter",
-  "version": "0.0.1-alpha",
+  "version": "0.0.1-beta",
   "description": "A Playwright reporter that uploads test results to Repertoire",
   "keywords": [
     "playwright",
