@@ -18,17 +18,25 @@ export async function POST(request: Request, context: RequestContext) {
   const formData = await request.formData();
   const files = formData.get("files") as Blob | null;
 
-  if (files && files instanceof File) {
-    const buffer = Buffer.from(await files.arrayBuffer());
+  try {
+    if (files && "name" in files) {
+      const buffer = Buffer.from(await files.arrayBuffer());
 
-    // if the filename has no extension, derive it from the contentType
-    let fileName = files.name;
-    if (fileName.split(".").length === 1) {
-      fileName = fileName + "." + files.type.split("/").pop();
+      // if the filename has no extension, derive it from the contentType
+      let fileName = files.name;
+      if (fileName.split(".").length === 1) {
+        fileName = fileName + "." + files.type.split("/").pop();
+      }
+
+      await minioClient.putObject("repertoire", `${params.runId}/${params.testId}/${fileName}`, buffer);
     }
+  } catch (err) {
+    console.log(err);
 
-    // TODO: may need to await?
-    minioClient.putObject("repertoire", `${params.runId}/${params.testId}/${fileName}`, buffer);
+    return new Response("File upload failed", {
+      status: 500,
+      headers: { "content-type": "application/json" },
+    });
   }
 
   return new Response("File uploaded", {
