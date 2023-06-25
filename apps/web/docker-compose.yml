@@ -1,8 +1,8 @@
 services:
-  mongodb:
+  mongo:
     image: bitnami/mongodb:6.0.6
-    # replicaset required for changestream to be enabled
     environment:
+      # replicaset required 
       - MONGODB_REPLICA_SET_MODE=primary
       - ALLOW_EMPTY_PASSWORD=yes
     ports:
@@ -10,25 +10,26 @@ services:
     volumes:
       - mongo:/data/db
     networks:
-      - service-network
-    restart: always
+      - shared
+    restart: on-failure
 
   minio:
-    image: minio/minio
+    image: bitnami/minio
     environment:
       - MINIO_ROOT_USER=ROOTUSER
       - MINIO_ROOT_PASSWORD=CHANGEME123
+      - MINIO_DEFAULT_BUCKETS=repertoire:public
     ports:
       - "9000:9000"
       - "9001:9001"
-    command: server /data --console-address ":9001"
     volumes:
       - minio:/data
     networks:
-      - service-network
+      - shared
+    restart: on-failure
 
 networks:
-  service-network:
+  shared:
     driver: bridge
 
 volumes:
