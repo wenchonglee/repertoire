@@ -1,25 +1,15 @@
 "use client";
 
+import { RunStatus } from "@/components/RunStatus";
 import { Spinner } from "@/components/Spinner";
 import { Button } from "@/components/shadcn/Button";
 import { Table } from "@/components/shadcn/Table";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/shadcn/Tooltip";
 import { PAGE_SIZE } from "@/lib/db/constants";
-import type { PlaywrightOutcome } from "@prisma/client";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import relativeTime from "dayjs/plugin/relativeTime";
-import {
-  CheckCircle2,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Dices,
-  SkipForward,
-  TestTube2,
-  XCircle,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, MehIcon, TestTube2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import { type RunResponse } from "./api/runs/route";
@@ -91,26 +81,50 @@ export default function LatestRuns(props: LatestRunsProps) {
 
         <Table.Body>
           {runs.map((row, index) => {
-            const duration = !!row.endTime
-              ? dayjs.duration(dayjs(row.endTime).diff(dayjs(row.startTime))).format("HH:mm:ss")
-              : null;
+            const startTime = dayjs(row.startTime);
+            const endTime = dayjs(row.endTime);
+            const duration = endTime.isValid() ? dayjs.duration(endTime.diff(startTime)).format("HH:mm:ss") : null;
+            const isPossiblyUnexpectedError = !endTime.isValid() && dayjs(new Date()).diff(startTime, "hours") > 4;
 
             return (
               <Table.Row key={index}>
                 <Table.Cell>{row.runId}</Table.Cell>
+
                 <Table.Cell title={dayjs(row.startTime).format("DD MMM YYYY")}>
                   {dayjs(row.startTime).fromNow()}
                 </Table.Cell>
-                <Table.Cell>{duration ?? <Spinner />}</Table.Cell>
+
                 <Table.Cell>
-                  <div className="flex gap-5">
-                    {/* ! Not sure why prisma is typing this incorrectly */}
-                    <RunStatus status="expected" count={row.results?.expected} />
-                    <RunStatus status="unexpected" count={row.results?.unexpected} />
-                    <RunStatus status="skipped" count={row.results?.skipped} />
-                    <RunStatus status="flaky" count={row.results?.flaky} />
-                  </div>
+                  {isPossiblyUnexpectedError ? (
+                    <TooltipProvider>
+                      <Tooltip delayDuration={150}>
+                        <TooltipTrigger asChild>
+                          <MehIcon />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Repertoire wasn&apos;t notified of the run end <br />
+                          after 4 hours, something probably went wrong
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : duration === null ? (
+                    <Spinner />
+                  ) : (
+                    duration
+                  )}
                 </Table.Cell>
+
+                <Table.Cell>
+                  {row.results && (
+                    <div className="flex gap-5">
+                      <RunStatus status="expected" count={row.results.expected} />
+                      <RunStatus status="unexpected" count={row.results.unexpected} />
+                      <RunStatus status="flaky" count={row.results.flaky} />
+                      <RunStatus status="skipped" count={row.results.skipped} />
+                    </div>
+                  )}
+                </Table.Cell>
+
                 <Table.Cell>
                   <Link
                     prefetch={false} // TODO revisit this
@@ -176,54 +190,5 @@ const PaginateButton = ({ isDisabled, link, children }: { isDisabled: boolean; l
     <Link prefetch={false} href={link}>
       {button}
     </Link>
-  );
-};
-const renderIcon = (status: PlaywrightOutcome) => {
-  switch (status) {
-    case "expected":
-      return <CheckCircle2 className="text-green-500 w-4 h-4" />;
-
-    case "unexpected":
-      return <XCircle className="text-red-500 w-4 h-4" />;
-
-    case "flaky":
-      return <Dices className="text-yellow-500 w-4 h-4" />;
-
-    case "skipped":
-      return <SkipForward className="text-stone-500 w-4 h-4" />;
-  }
-};
-
-const renderTooltipContent = (status: PlaywrightOutcome) => {
-  switch (status) {
-    case "expected":
-      return "Expected";
-
-    case "unexpected":
-      return "Unexpected";
-
-    case "flaky":
-      return "Flaky";
-
-    case "skipped":
-      return "Skipped";
-  }
-};
-
-export const RunStatus = (props: { status: PlaywrightOutcome; count?: number }) => {
-  return (
-    <TooltipProvider>
-      <Tooltip delayDuration={150}>
-        <TooltipTrigger asChild>
-          <div className="flex gap-1 items-center font-medium">
-            {renderIcon(props.status)}
-            {props.count}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{renderTooltipContent(props.status)}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
   );
 };

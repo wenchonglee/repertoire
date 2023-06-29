@@ -1,6 +1,6 @@
-import { RunStatus } from "@/app/LatestRuns";
 import { getRun } from "@/app/api/runs/[runId]/getRun";
 import { ProjectBadge } from "@/components/ProjectBadge";
+import { RunStatus } from "@/components/RunStatus";
 import { formatDuration } from "@/lib/utils/formatDuration";
 import { AlarmClock } from "lucide-react";
 import TestSummary from "./TestSummary";
@@ -28,11 +28,10 @@ export default async function RunPage({ params }: { params: { runId: string } })
 
         <div className="flex gap-4">
           <div className="flex gap-5">
-            {/* ! Not sure why prisma is typing this incorrectly */}
             <RunStatus status="expected" count={data.results?.expected} />
             <RunStatus status="unexpected" count={data.results?.unexpected} />
-            <RunStatus status="skipped" count={data.results?.skipped} />
             <RunStatus status="flaky" count={data.results?.flaky} />
+            <RunStatus status="skipped" count={data.results?.skipped} />
           </div>
 
           <div className="flex gap-1 items-center ">

@@ -1,6 +1,6 @@
 import { getTests } from "@/app/api/runs/[runId]/tests/getTests";
-import { Card } from "@/components/Card";
 import { ProjectBadge } from "@/components/ProjectBadge";
+import { Card } from "@/components/shadcn/Card";
 import { formatDuration } from "@/lib/utils/formatDuration";
 import type { PlaywrightTests } from "@prisma/client";
 import clsx from "clsx";
