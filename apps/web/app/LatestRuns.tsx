@@ -1,9 +1,9 @@
 "use client";
 
-import { Button } from "@/components/Button";
 import { Spinner } from "@/components/Spinner";
-import { Table } from "@/components/Table";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/Tooltip";
+import { Button } from "@/components/shadcn/Button";
+import { Table } from "@/components/shadcn/Table";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/shadcn/Tooltip";
 import { PAGE_SIZE } from "@/lib/db/constants";
 import type { PlaywrightOutcome } from "@prisma/client";
 import dayjs from "dayjs";
@@ -157,7 +157,6 @@ export default function LatestRuns(props: LatestRunsProps) {
           </div>
         </div>
       </div>
-      {/* <EventListener /> */}
     </>
   );
 }

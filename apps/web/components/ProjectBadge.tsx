@@ -1,16 +1,17 @@
-import { Badge } from "./Badge";
+import { cn } from "@/lib/utils";
+import { Badge } from "./shadcn/Badge";
 
 const COLORS: Record<number, string> = {
-  0: "bg-emerald-600",
-  1: "bg-orange-600",
-  2: "bg-sky-600",
-  3: "bg-slate-600",
-  4: "bg-yellow-600",
-  5: "bg-pink-600",
+  0: "bg-emerald-600 hover:bg-emerald-700",
+  1: "bg-orange-600 hover:bg-orange-700",
+  2: "bg-sky-600 hover:bg-sky-700",
+  3: "bg-slate-600 hover:bg-slate-700",
+  4: "bg-yellow-600 hover:bg-yellow-700",
+  5: "bg-pink-600 hover:bg-pink-700",
 };
 
 export const ProjectBadge = ({ children }: { children: string }) => {
-  return <Badge className={COLORS[hashStringToInt(children)]}>{children}</Badge>;
+  return <Badge className={cn("cursor-default", COLORS[hashStringToInt(children)])}>{children}</Badge>;
 };
 
 function hashStringToInt(str: string) {

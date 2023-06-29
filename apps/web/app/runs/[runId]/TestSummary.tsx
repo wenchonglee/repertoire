@@ -4,7 +4,7 @@ import { ProjectBadge } from "@/components/ProjectBadge";
 import { formatDuration } from "@/lib/utils/formatDuration";
 import type { PlaywrightTests } from "@prisma/client";
 import clsx from "clsx";
-import { AlertCircle, CheckCircle2, SkipForward, TimerOff, XCircle } from "lucide-react";
+import { AlertCircle, CheckCircle2, FileCodeIcon, SkipForward, TimerOff, XCircle } from "lucide-react";
 import Link from "next/link";
 
 export default async function TestSummary(props: { runId: string }) {
@@ -14,11 +14,15 @@ export default async function TestSummary(props: { runId: string }) {
     <div className="flex flex-col gap-4">
       {data.map((file) => {
         return (
-          <Card key={file._id}>
-            <Card.Header>
-              <Card.Title>{file._id}</Card.Title>
+          <Card key={file._id} className="shadow-sm">
+            <Card.Header className="border-b p-4">
+              <Card.Title className="flex items-center gap-2">
+                <FileCodeIcon />
+                {file._id}
+              </Card.Title>
             </Card.Header>
-            <Card.Content>
+
+            <Card.Content className="p-4">
               {file.tests.map((row) => {
                 const duration = formatDuration(row.startTime?.$date, row.endTime?.$date);
 
@@ -30,13 +34,18 @@ export default async function TestSummary(props: { runId: string }) {
                       "text-muted-foreground": row.status === "skipped",
                     })}
                   >
-                    <TestStatusIcon status={row.status} />
+                    <div className="flex gap-2 items-center grow">
+                      <TestStatusIcon status={row.status} />
 
-                    <Link href={`/runs/${props.runId}/tests/${row.testId}`}>
-                      <div>{row.title}</div>
-                    </Link>
-                    <ProjectBadge>{row.projectName}</ProjectBadge>
-                    <div>{duration}</div>
+                      <Link href={`/runs/${props.runId}/tests/${row.testId}`}>
+                        <div>{row.title}</div>
+                      </Link>
+                    </div>
+
+                    <div>
+                      <ProjectBadge>{row.projectName}</ProjectBadge>
+                    </div>
+                    <div className="w-24 text-right">{duration}</div>
                   </div>
                 );
               })}

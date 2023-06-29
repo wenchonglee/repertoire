@@ -1,5 +1,6 @@
 import { RunStatus } from "@/app/LatestRuns";
 import { getRun } from "@/app/api/runs/[runId]/getRun";
+import { ProjectBadge } from "@/components/ProjectBadge";
 import { formatDuration } from "@/lib/utils/formatDuration";
 import { AlarmClock } from "lucide-react";
 import TestSummary from "./TestSummary";
@@ -38,7 +39,11 @@ export default async function RunPage({ params }: { params: { runId: string } })
             <AlarmClock className="w-4 h-4" /> {duration}
           </div>
 
-          <div>{data.projects.join(", ")}</div>
+          <div className="flex gap-2">
+            {data.projects.map((project) => (
+              <ProjectBadge key={project}>{project}</ProjectBadge>
+            ))}
+          </div>
 
           <div>Number of shards: {data.totalShards}</div>
         </div>
