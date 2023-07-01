@@ -3,20 +3,19 @@ import { FullConfig, FullResult, Reporter, Suite, TestCase, TestResult } from "@
 import { createReadStream } from "node:fs";
 import { posix, relative, sep } from "node:path";
 import { buffer } from "node:stream/consumers";
-import { simpleHash } from "./simpleHash";
-
-const RUN_ID = process.env["RUN_ID"] ?? simpleHash(new Date().toISOString());
 
 class RepertoireReporter implements Reporter {
   context: Promise<APIRequestContext> | undefined;
   url: string;
   allPromises: Promise<any>[] = [];
   beginPromise: Promise<any> | undefined;
+  runId: string;
 
   constructor(options: { url: string }) {
     // URL should be the domain only (e.g. http://localhost:3000)
     this.url = `${options.url}/api/`;
-    console.log("RUN_ID: ", RUN_ID, " URL: ", this.url);
+    this.runId = process.env["RUN_ID"] ?? this.simpleHash(new Date().toISOString());
+    console.log("RUN_ID: ", this.runId, " URL: ", this.url);
   }
 
   async getContext() {
@@ -25,7 +24,7 @@ class RepertoireReporter implements Reporter {
   }
 
   onBegin(config: FullConfig, suite: Suite) {
-    console.log(`Starting the run with ${suite.allTests().length} tests, with Run ID: ${RUN_ID}`);
+    console.log(`Starting the run with ${suite.allTests().length} tests, with Run ID: ${this.runId}`);
 
     this.context = request.newContext({ baseURL: this.url });
     this.beginPromise = this.reportTestRunStart(config, suite);
@@ -41,12 +40,13 @@ class RepertoireReporter implements Reporter {
   onTestEnd(test: TestCase, result: TestResult) {
     console.log(`Finished test ${test.title}: ${result.status}`);
     const testEnd = this.reportTestEnd(test, result);
-
-    console.log(`Uploading files: ${result.attachments.map((attachment) => attachment.name).join(", ")}`);
-    const uploadFiles = this.uploadFiles(result, test);
-
     this.allPromises.push(testEnd);
-    this.allPromises.push(uploadFiles);
+
+    if (result.attachments.length > 0) {
+      console.log(`Uploading files: ${result.attachments.map((attachment) => attachment.name).join(", ")}`);
+      const uploadFiles = this.uploadFiles(result, test);
+      this.allPromises.push(uploadFiles);
+    }
   }
 
   async onEnd(result: FullResult) {
@@ -125,7 +125,7 @@ class RepertoireReporter implements Reporter {
     try {
       const response = await context.post("./runs", {
         data: {
-          runId: RUN_ID,
+          runId: this.runId,
           startTime: new Date().toISOString(),
           projects,
           totalShards,
@@ -146,7 +146,7 @@ class RepertoireReporter implements Reporter {
     await this.beginPromise;
 
     try {
-      const response = await context.put(`./runs/${RUN_ID}`, {
+      const response = await context.put(`./runs/${this.runId}`, {
         data: {
           endTime: new Date().toISOString(),
           status: result.status,
@@ -164,7 +164,7 @@ class RepertoireReporter implements Reporter {
     await this.beginPromise;
 
     try {
-      const response = await context.put(`./runs/${RUN_ID}/tests/${test.id}`, {
+      const response = await context.put(`./runs/${this.runId}/tests/${test.id}`, {
         data: {
           startTime: new Date().toISOString(),
         },
@@ -181,7 +181,7 @@ class RepertoireReporter implements Reporter {
     await this.beginPromise;
 
     try {
-      const response = await context.put(`./runs/${RUN_ID}/tests/${test.id}`, {
+      const response = await context.put(`./runs/${this.runId}/tests/${test.id}`, {
         data: {
           endTime: new Date().toISOString(),
           outcome: test.outcome(),
@@ -210,7 +210,7 @@ class RepertoireReporter implements Reporter {
       try {
         const fileData = createReadStream(attachment.path);
 
-        const response = await context.post(`./runs/${RUN_ID}/tests/${test.id}/attachments`, {
+        const response = await context.post(`./runs/${this.runId}/tests/${test.id}/attachments`, {
           multipart: {
             files: {
               buffer: await buffer(fileData),
@@ -228,6 +228,16 @@ class RepertoireReporter implements Reporter {
   toPosixPath(pathString: string): string {
     return pathString.split(sep).join(posix.sep);
   }
+
+  simpleHash = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash &= hash; // Convert to 32bit integer
+    }
+    return new Uint32Array([hash])[0].toString(36);
+  };
 }
 
 export default RepertoireReporter;

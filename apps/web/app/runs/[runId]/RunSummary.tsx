@@ -7,7 +7,7 @@ import clsx from "clsx";
 import { AlertCircle, CheckCircle2, FileCodeIcon, SkipForward, TimerOff, XCircle } from "lucide-react";
 import Link from "next/link";
 
-export default async function TestSummary(props: { runId: string }) {
+export default async function RunSummary(props: { runId: string }) {
   const data = await getTests(props.runId);
 
   return (

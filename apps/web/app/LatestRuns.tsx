@@ -130,7 +130,7 @@ export default function LatestRuns(props: LatestRunsProps) {
                     prefetch={false} // TODO revisit this
                     href={`/runs/${row.runId}`}
                   >
-                    <Button>
+                    <Button variant="outline">
                       <TestTube2 className="mr-2 h-4 w-4" />
                       View results
                     </Button>

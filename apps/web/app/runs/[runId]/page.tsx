@@ -3,7 +3,7 @@ import { ProjectBadge } from "@/components/ProjectBadge";
 import { RunStatus } from "@/components/RunStatus";
 import { formatDuration } from "@/lib/utils/formatDuration";
 import { AlarmClock } from "lucide-react";
-import TestSummary from "./TestSummary";
+import RunSummary from "./RunSummary";
 
 export default async function RunPage({ params }: { params: { runId: string } }) {
   const data = await getRun(params.runId);
@@ -47,7 +47,7 @@ export default async function RunPage({ params }: { params: { runId: string } })
           <div>Number of shards: {data.totalShards}</div>
         </div>
         {/* @ts-expect-error Async Server Component */}
-        <TestSummary runId={params.runId} />
+        <RunSummary runId={params.runId} />
       </div>
     </main>
   );
