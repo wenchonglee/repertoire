@@ -1,13 +1,12 @@
+import { getTests } from "@/app/api/runs/[runId]/tests/getTests";
 import { throttle } from "lodash";
-import { getCurrentRunResults } from "../../runs/[runId]/getCurrentRunResults";
-import { emitter } from "../emitter";
-
+import { emitter } from "../../emitter";
 export const dynamic = "force-dynamic";
 
 /**
- * GET /api/events/runs
+ * GET /api/events/runs/:runId
  *
- * This is a Server Sent Event API for clients to receive updates of Runs
+ * This is a Server Sent Event API for clients to receive updates of a single Run
  */
 export async function GET() {
   const responseStream = new TransformStream();
@@ -15,7 +14,7 @@ export async function GET() {
 
   const encoder = new TextEncoder();
 
-  // Update the client with the current state of the run when RUN_UPDATED is emitted on tests' completion
+  // Update the client with test outcomes when RUN_UPDATED is emitted on tests' completion
   // TODO: throttle this
   // TODO: these event listeners should be removed if the client disconnects, but there doesn't seem to be a solution for that yet
   // TODO: https://github.com/vercel/next.js/discussions/48427
@@ -24,7 +23,7 @@ export async function GET() {
     throttle(
       async (runId: string, _testId: string) => {
         await writer.ready;
-        const results = await getCurrentRunResults(runId);
+        const results = await getTests(runId);
         const runUpdatedEvent = {
           event: "RUN_UPDATED",
           runId,
@@ -37,30 +36,6 @@ export async function GET() {
       { leading: true }
     )
   );
-
-  // Update the client if a new test run has started
-  emitter.on("RUN_STARTED", async (runId: string, startTime: string) => {
-    await writer.ready;
-    const runStartedEvent = {
-      event: "RUN_STARTED",
-      runId,
-      startTime,
-    };
-
-    writer.write(encoder.encode(`event: message\ndata: ${JSON.stringify(runStartedEvent)}\n\n`));
-  });
-
-  // Update the client if a test run has ended
-  emitter.on("RUN_ENDED", async (runId: string, endTime: string) => {
-    await writer.ready;
-    const runEndedEvent = {
-      event: "RUN_ENDED",
-      runId,
-      endTime,
-    };
-
-    writer.write(encoder.encode(`event: message\ndata: ${JSON.stringify(runEndedEvent)}\n\n`));
-  });
 
   writer.write(encoder.encode("ready"));
 

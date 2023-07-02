@@ -1,18 +1,48 @@
-import { getTests } from "@/app/api/runs/[runId]/tests/getTests";
+"use client";
+
+import { type AggregatedTests } from "@/app/api/runs/[runId]/tests/getTests";
 import { ProjectBadge } from "@/components/ProjectBadge";
 import { Card } from "@/components/shadcn/Card";
 import { formatDuration } from "@/lib/utils/formatDuration";
 import type { PlaywrightTests } from "@prisma/client";
 import clsx from "clsx";
+import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
+import relativeTime from "dayjs/plugin/relativeTime";
 import { AlertCircle, CheckCircle2, FileCodeIcon, SkipForward, TimerOff, XCircle } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-export default async function RunSummary(props: { runId: string }) {
-  const data = await getTests(props.runId);
+dayjs.extend(relativeTime);
+dayjs.extend(duration);
+
+export default function RunSummary(props: { data: AggregatedTests[]; runId: string }) {
+  const { data, runId } = props;
+
+  const [tests, setTests] = useState(data);
+
+  useEffect(() => {
+    const evtSource = new EventSource(`${window.location.origin}/api/events/runs/${runId}`);
+
+    evtSource.onmessage = (ev) => {
+      try {
+        const updatedResults = JSON.parse(ev.data);
+
+        switch (updatedResults.event) {
+          case "RUN_UPDATED":
+            setTests(updatedResults.results);
+            break;
+        }
+      } catch (err) {
+        console.warn(err);
+      }
+    };
+    return () => evtSource.close();
+  }, [runId]);
 
   return (
     <div className="flex flex-col gap-4">
-      {data.map((file) => {
+      {tests.map((file) => {
         return (
           <Card key={file._id} className="shadow-sm">
             <Card.Header className="border-b p-4">
@@ -37,7 +67,7 @@ export default async function RunSummary(props: { runId: string }) {
                     <div className="flex gap-2 items-center grow">
                       <TestStatusIcon status={row.status} />
 
-                      <Link href={`/runs/${props.runId}/tests/${row.testId}`}>
+                      <Link href={`/runs/${runId}/tests/${row.testId}`}>
                         <div>{row.title}</div>
                       </Link>
                     </div>

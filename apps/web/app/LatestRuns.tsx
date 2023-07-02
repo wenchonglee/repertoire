@@ -28,10 +28,6 @@ export default function LatestRuns(props: LatestRunsProps) {
   const [runs, setRuns] = useState(data.runs);
 
   useEffect(() => {
-    setRuns(data.runs);
-  }, [data]);
-
-  useEffect(() => {
     const evtSource = new EventSource(`${window.location.origin}/api/events/runs`);
 
     evtSource.onmessage = (ev) => {

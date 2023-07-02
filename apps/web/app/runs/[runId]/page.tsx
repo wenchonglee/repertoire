@@ -1,4 +1,5 @@
 import { getRun } from "@/app/api/runs/[runId]/getRun";
+import { getTests } from "@/app/api/runs/[runId]/tests/getTests";
 import { ProjectBadge } from "@/components/ProjectBadge";
 import { RunStatus } from "@/components/RunStatus";
 import { formatDuration } from "@/lib/utils/formatDuration";
@@ -6,13 +7,14 @@ import { AlarmClock } from "lucide-react";
 import RunSummary from "./RunSummary";
 
 export default async function RunPage({ params }: { params: { runId: string } }) {
-  const data = await getRun(params.runId);
+  const runData = await getRun(params.runId);
+  const testsData = await getTests(params.runId);
 
-  if (!data) {
+  if (!runData || !testsData) {
     return null;
   }
 
-  const duration = formatDuration(data.startTime, data.endTime);
+  const duration = formatDuration(runData.startTime, runData.endTime);
 
   return (
     <main className="mx-auto max-w-screen-xl">
@@ -28,10 +30,10 @@ export default async function RunPage({ params }: { params: { runId: string } })
 
         <div className="flex gap-4">
           <div className="flex gap-5">
-            <RunStatus status="expected" count={data.results?.expected} />
-            <RunStatus status="unexpected" count={data.results?.unexpected} />
-            <RunStatus status="flaky" count={data.results?.flaky} />
-            <RunStatus status="skipped" count={data.results?.skipped} />
+            <RunStatus status="expected" count={runData.results?.expected} />
+            <RunStatus status="unexpected" count={runData.results?.unexpected} />
+            <RunStatus status="flaky" count={runData.results?.flaky} />
+            <RunStatus status="skipped" count={runData.results?.skipped} />
           </div>
 
           <div className="flex gap-1 items-center ">
@@ -39,15 +41,15 @@ export default async function RunPage({ params }: { params: { runId: string } })
           </div>
 
           <div className="flex gap-2">
-            {data.projects.map((project) => (
+            {runData.projects.map((project) => (
               <ProjectBadge key={project}>{project}</ProjectBadge>
             ))}
           </div>
 
-          <div>Number of shards: {data.totalShards}</div>
+          <div>Number of shards: {runData.totalShards}</div>
         </div>
         {/* @ts-expect-error Async Server Component */}
-        <RunSummary runId={params.runId} />
+        <RunSummary runId={params.runId} data={testsData} />
       </div>
     </main>
   );

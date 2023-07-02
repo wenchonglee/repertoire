@@ -7,7 +7,7 @@ type TestResponse = {
   endTime: { $date: string };
 } & PlaywrightTests;
 
-type AggregatedTests = {
+export type AggregatedTests = {
   _id: string;
   tests: TestResponse[];
 };
