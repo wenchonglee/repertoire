@@ -1,6 +1,6 @@
 import { Client } from "minio";
 
-const globalForMinio = global as unknown as {
+const globalForMinio = globalThis as unknown as {
   minio: Client | undefined;
 };
 

@@ -16,6 +16,8 @@ export async function GET() {
 
   // Update the client with the current state of the run when RUN_UPDATED is emitted on tests' completion
   // TODO: throttle this
+  // TODO: these event listeners should be removed if the client disconnects, but there doesn't seem to be a solution for that yet
+  // TODO: https://github.com/vercel/next.js/discussions/48427
   emitter.on("RUN_UPDATED", async (runId: string, _testId: string) => {
     const results = await getCurrentRunResults(runId);
     const runUpdatedEvent = {
