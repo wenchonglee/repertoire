@@ -1,6 +1,6 @@
 services:
   repertoire:
-    image: wenchonglee/repertoire:0.0.1-beta
+    image: wenchonglee/repertoire:0.0.5-beta
     ports:
       - 3000:3000
     environment:
