@@ -1,6 +1,6 @@
 {
   "name": "web",
-  "version": "0.0.1-beta",
+  "version": "0.0.5-beta",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

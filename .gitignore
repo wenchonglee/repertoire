@@ -38,6 +38,7 @@ yarn-error.log*
 # playwright
 playwright-report
 test-results
+test-artifacts
 
 todo.md
 dist

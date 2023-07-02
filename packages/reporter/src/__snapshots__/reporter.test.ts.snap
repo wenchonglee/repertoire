@@ -1,0 +1,97 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`reporter 1`] = `
+{
+  "projects": [
+    "chromium",
+  ],
+  "runId": "vitest",
+  "shardId": 1,
+  "tests": [
+    {
+      "annotations": [],
+      "expectedStatus": "passed",
+      "fileName": "reporter-snapshot.spec.ts",
+      "projectName": "chromium",
+      "tags": [],
+      "testId": "28b2bf81bad5aac29ce2-25ef8da37777e9cf46d7",
+      "timeout": 30000,
+      "title": "vitest",
+      "titlePath": [
+        "",
+        "chromium",
+        "reporter-snapshot.spec.ts",
+        "vitest",
+      ],
+    },
+  ],
+  "totalShards": 1,
+  "version": "1.34.2",
+}
+`;
+
+exports[`reporter 2`] = `
+{
+  "status": "passed",
+}
+`;
+
+exports[`reporter 3`] = `{}`;
+
+exports[`reporter 4`] = `
+{
+  "attachments": [],
+  "errors": [],
+  "expectedStatus": "passed",
+  "outcome": "expected",
+  "status": "passed",
+}
+`;
+
+exports[`reporter produces matching snapshots 1`] = `
+{
+  "projects": [
+    "chromium",
+  ],
+  "runId": "vitest",
+  "shardId": 1,
+  "tests": [
+    {
+      "annotations": [],
+      "expectedStatus": "passed",
+      "fileName": "reporter-snapshot.spec.ts",
+      "projectName": "chromium",
+      "tags": [],
+      "testId": "28b2bf81bad5aac29ce2-25ef8da37777e9cf46d7",
+      "timeout": 30000,
+      "title": "vitest",
+      "titlePath": [
+        "",
+        "chromium",
+        "reporter-snapshot.spec.ts",
+        "vitest",
+      ],
+    },
+  ],
+  "totalShards": 1,
+  "version": "1.34.2",
+}
+`;
+
+exports[`reporter produces matching snapshots 2`] = `
+{
+  "status": "passed",
+}
+`;
+
+exports[`reporter produces matching snapshots 3`] = `{}`;
+
+exports[`reporter produces matching snapshots 4`] = `
+{
+  "attachments": [],
+  "errors": [],
+  "expectedStatus": "passed",
+  "outcome": "expected",
+  "status": "passed",
+}
+`;

@@ -1,6 +1,10 @@
-playwright-report
-src
-test-results
-tests
-playwright.config.ts
 .turbo
+src
+playwright.config.ts
+playwright-report
+tests
+test-results
+test-artifacts
+tsconfig.json
+__snapshots__
+*.test.ts

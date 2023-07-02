@@ -1,6 +1,6 @@
 import { APIRequestContext, request } from "@playwright/test";
 import { FullConfig, FullResult, Reporter, Suite, TestCase, TestResult } from "@playwright/test/reporter";
-import { createReadStream } from "node:fs";
+import { createReadStream, promises } from "node:fs";
 import { posix, relative, sep } from "node:path";
 import { buffer } from "node:stream/consumers";
 
@@ -10,12 +10,13 @@ class RepertoireReporter implements Reporter {
   allPromises: Promise<any>[] = [];
   beginPromise: Promise<any> | undefined;
   runId: string;
+  shouldCreateArtifacts: boolean;
 
-  constructor(options: { url: string }) {
+  constructor(options: { url: string; shouldCreateArtifacts?: boolean }) {
     // URL should be the domain only (e.g. http://localhost:3000)
     this.url = `${options.url}/api/`;
     this.runId = process.env["RUN_ID"] ?? this.simpleHash(new Date().toISOString());
-    console.log("RUN_ID: ", this.runId, " URL: ", this.url);
+    this.shouldCreateArtifacts = options.shouldCreateArtifacts ?? false;
   }
 
   async getContext() {
@@ -24,26 +25,31 @@ class RepertoireReporter implements Reporter {
   }
 
   onBegin(config: FullConfig, suite: Suite) {
-    console.log(`Starting the run with ${suite.allTests().length} tests, with Run ID: ${this.runId}`);
+    console.log(`[Repertoire] Run ID: ${this.runId}`);
+    console.log(`[Repertoire] Repertoire url: ${this.url}`);
+    console.log(`[Repertoire] Should create artifacts: ${this.shouldCreateArtifacts.toString()}`);
+    console.log(`[Repertoire] Starting the run with ${suite.allTests().length} tests.`);
 
     this.context = request.newContext({ baseURL: this.url });
     this.beginPromise = this.reportTestRunStart(config, suite);
   }
 
   onTestBegin(test: TestCase, result: TestResult) {
-    console.log(`Starting test ID: ${test.id}, Title: ${test.title}`);
+    console.log(`[Repertoire] Starting test ID: ${test.id}, Title: "${test.title}"`);
     const testStart = this.reportTestStart(test, result);
 
     this.allPromises.push(testStart);
   }
 
   onTestEnd(test: TestCase, result: TestResult) {
-    console.log(`Finished test ${test.title}: ${result.status}`);
+    console.log(`[Repertoire] Finished test "${test.title}": ${result.status}`);
     const testEnd = this.reportTestEnd(test, result);
     this.allPromises.push(testEnd);
 
     if (result.attachments.length > 0) {
-      console.log(`Uploading files: ${result.attachments.map((attachment) => attachment.name).join(", ")}`);
+      console.log(
+        `[Repertoire] Uploading files: ${result.attachments.map((attachment) => attachment.name).join(", ")}`
+      );
       const uploadFiles = this.uploadFiles(result, test);
       this.allPromises.push(uploadFiles);
     }
@@ -52,7 +58,7 @@ class RepertoireReporter implements Reporter {
   async onEnd(result: FullResult) {
     await Promise.allSettled(this.allPromises);
 
-    console.log(`Finished the run: ${result.status}`);
+    console.log(`[Repertoire] Finished the run: ${result.status}`);
     await this.reportTestRunEnd(result);
   }
 
@@ -70,14 +76,14 @@ class RepertoireReporter implements Reporter {
      * * Determine the config, it is assumed all shards have the same config
      */
     const projects = suite.suites.map((projectSuite) => projectSuite.title);
-    const totalShards = config.shard?.total;
+    const totalShards = config.shard?.total ?? 1;
     const allTests: any[] = [];
 
     /**
      * * Group by projects, first level suite is always the project
      */
     for (const projectSuite of suite.suites) {
-      console.log("Project: ", projectSuite.title);
+      console.log("[Repertoire] Project: ", projectSuite.title);
       const projectName = projectSuite.title;
 
       for (const fileSuite of projectSuite.suites) {
@@ -122,21 +128,27 @@ class RepertoireReporter implements Reporter {
       }
     }
 
+    const payload = {
+      runId: this.runId,
+      startTime: new Date().toISOString(),
+      projects,
+      totalShards,
+      shardId: config.shard?.current ?? 1,
+      version: config.version,
+      tests: allTests,
+    };
+
     try {
       const response = await context.post("./runs", {
-        data: {
-          runId: this.runId,
-          startTime: new Date().toISOString(),
-          projects,
-          totalShards,
-          shardId: config.shard?.current,
-          version: config.version,
-          tests: allTests,
-        },
+        data: payload,
         headers: { "content-type": "application/json" },
       });
     } catch (err) {
       console.log(err);
+    }
+
+    if (this.shouldCreateArtifacts) {
+      await promises.writeFile("./test-artifacts/run_start.json", JSON.stringify(payload));
     }
   }
 
@@ -145,16 +157,22 @@ class RepertoireReporter implements Reporter {
     if (!context) return;
     await this.beginPromise;
 
+    const payload = {
+      endTime: new Date().toISOString(),
+      status: result.status,
+    };
+
     try {
       const response = await context.put(`./runs/${this.runId}`, {
-        data: {
-          endTime: new Date().toISOString(),
-          status: result.status,
-        },
+        data: payload,
         headers: { "content-type": "application/json" },
       });
     } catch (err) {
       console.log(err);
+    }
+
+    if (this.shouldCreateArtifacts) {
+      await promises.writeFile("./test-artifacts/run_end.json", JSON.stringify(payload));
     }
   }
 
@@ -163,15 +181,21 @@ class RepertoireReporter implements Reporter {
     if (!context) return;
     await this.beginPromise;
 
+    const payload = {
+      startTime: new Date().toISOString(),
+    };
+
     try {
       const response = await context.put(`./runs/${this.runId}/tests/${test.id}`, {
-        data: {
-          startTime: new Date().toISOString(),
-        },
+        data: payload,
         headers: { "content-type": "application/json" },
       });
     } catch (err) {
       console.log(err);
+    }
+
+    if (this.shouldCreateArtifacts) {
+      await promises.writeFile(`./test-artifacts/${test.id}_start.json`, JSON.stringify(payload));
     }
   }
 
@@ -180,23 +204,29 @@ class RepertoireReporter implements Reporter {
     if (!context) return;
     await this.beginPromise;
 
+    const payload = {
+      endTime: new Date().toISOString(),
+      outcome: test.outcome(),
+      errors: result.errors,
+      status: result.status,
+      expectedStatus: test.expectedStatus,
+      attachments: result.attachments.map((attachment) => ({
+        fileName: attachment.name,
+        contentType: attachment.contentType,
+      })),
+    };
+
     try {
       const response = await context.put(`./runs/${this.runId}/tests/${test.id}`, {
-        data: {
-          endTime: new Date().toISOString(),
-          outcome: test.outcome(),
-          errors: result.errors,
-          status: result.status,
-          expectedStatus: test.expectedStatus,
-          attachments: result.attachments.map((attachment) => ({
-            fileName: attachment.name,
-            contentType: attachment.contentType,
-          })),
-        },
+        data: payload,
         headers: { "content-type": "application/json" },
       });
     } catch (err) {
       console.log(err);
+    }
+
+    if (this.shouldCreateArtifacts) {
+      await promises.writeFile(`./test-artifacts/${test.id}_end.json`, JSON.stringify(payload));
     }
   }
 
