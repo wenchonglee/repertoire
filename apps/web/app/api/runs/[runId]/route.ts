@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { emitter } from "../../events/emitter";
 import { getCurrentRunResults } from "./getCurrentRunResults";
 import { getRun } from "./getRun";
 import { RunPutRequest } from "./models";
@@ -45,6 +46,10 @@ export async function PUT(request: Request, context: RequestContext) {
       results,
     },
   });
+
+  if (requestBody.endTime) {
+    emitter.emit("RUN_ENDED", params.runId, requestBody.endTime);
+  }
 
   return new Response(JSON.stringify(run), {
     status: 200,

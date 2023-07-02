@@ -39,6 +39,16 @@ export default function LatestRuns(props: LatestRunsProps) {
         const updatedResults = JSON.parse(ev.data);
 
         switch (updatedResults.event) {
+          case "RUN_STARTED":
+            setRuns((prev) => [
+              {
+                runId: updatedResults.runId,
+                startTime: updatedResults.startTime,
+              } as any,
+              ...prev,
+            ]);
+            break;
+
           case "RUN_UPDATED":
             setRuns((prev) =>
               prev.map((run) => {
@@ -49,14 +59,13 @@ export default function LatestRuns(props: LatestRunsProps) {
             );
             break;
 
-          case "RUN_STARTED":
-            setRuns((prev) => [
-              {
-                runId: updatedResults.runId,
-                startTime: updatedResults.startTime,
-              } as any,
-              ...prev,
-            ]);
+          case "RUN_ENDED":
+            setRuns((prev) =>
+              prev.map((run) => {
+                if (run.runId === updatedResults.runId) return { ...run, endTime: updatedResults.endTime };
+                return run;
+              })
+            );
             break;
         }
       } catch (err) {
@@ -83,7 +92,7 @@ export default function LatestRuns(props: LatestRunsProps) {
           {runs.map((row, index) => {
             const startTime = dayjs(row.startTime);
             const endTime = dayjs(row.endTime);
-            const duration = endTime.isValid() ? dayjs.duration(endTime.diff(startTime)).format("HH:mm:ss") : null;
+            const duration = !!row.endTime ? dayjs.duration(endTime.diff(startTime)).format("HH:mm:ss") : null;
             const isPossiblyUnexpectedError = !endTime.isValid() && dayjs(new Date()).diff(startTime, "hours") > 4;
 
             return (

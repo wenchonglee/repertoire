@@ -19,6 +19,7 @@ export async function GET() {
   // TODO: these event listeners should be removed if the client disconnects, but there doesn't seem to be a solution for that yet
   // TODO: https://github.com/vercel/next.js/discussions/48427
   emitter.on("RUN_UPDATED", async (runId: string, _testId: string) => {
+    await writer.ready;
     const results = await getCurrentRunResults(runId);
     const runUpdatedEvent = {
       event: "RUN_UPDATED",
@@ -31,6 +32,7 @@ export async function GET() {
 
   // Update the client if a new test run has started
   emitter.on("RUN_STARTED", async (runId: string, startTime: string) => {
+    await writer.ready;
     const runStartedEvent = {
       event: "RUN_STARTED",
       runId,
@@ -40,7 +42,17 @@ export async function GET() {
     writer.write(encoder.encode(`event: message\ndata: ${JSON.stringify(runStartedEvent)}\n\n`));
   });
 
-  writer.write(encoder.encode(`event: open`));
+  // Update the client if a test run has ended
+  emitter.on("RUN_ENDED", async (runId: string, endTime: string) => {
+    await writer.ready;
+    const runEndedEvent = {
+      event: "RUN_ENDED",
+      runId,
+      endTime,
+    };
+
+    writer.write(encoder.encode(`event: message\ndata: ${JSON.stringify(runEndedEvent)}\n\n`));
+  });
 
   return new Response(responseStream.readable, {
     status: 200,

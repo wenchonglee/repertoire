@@ -9,7 +9,7 @@ export const RunStatus = (props: { status: PlaywrightOutcome; count?: number }) 
         <TooltipTrigger asChild>
           <div className="flex gap-1 items-center font-medium">
             {renderIcon(props.status)}
-            {props.count}
+            {props.count ?? 0}
           </div>
         </TooltipTrigger>
         <TooltipContent>
