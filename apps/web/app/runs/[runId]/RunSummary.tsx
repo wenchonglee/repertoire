@@ -3,23 +3,32 @@
 import { type AggregatedTests } from "@/app/api/runs/[runId]/tests/getTests";
 import { ProjectBadge } from "@/components/ProjectBadge";
 import { Card } from "@/components/shadcn/Card";
+import { Input } from "@/components/shadcn/Input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/shadcn/Tabs";
 import { formatDuration } from "@/lib/utils/formatDuration";
-import type { PlaywrightTests } from "@prisma/client";
+import type { PlaywrightRuns, PlaywrightTests } from "@prisma/client";
 import clsx from "clsx";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { AlertCircle, CheckCircle2, FileCodeIcon, SkipForward, TimerOff, XCircle } from "lucide-react";
+import { debounce } from "lodash";
+import { AlertCircle, CheckCircle2, Dices, FileCodeIcon, SkipForward, TimerOff, XCircle } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 dayjs.extend(relativeTime);
 dayjs.extend(duration);
 
-export default function RunSummary(props: { data: AggregatedTests[]; runId: string }) {
-  const { data, runId } = props;
+type RunSummaryProps = {
+  testsData: AggregatedTests[];
+  runId: string;
+  runData: PlaywrightRuns;
+};
 
-  const [tests, setTests] = useState(data);
+export default function RunSummary(props: RunSummaryProps) {
+  const { testsData, runId, runData } = props;
+
+  const [tests, setTests] = useState(testsData);
 
   useEffect(() => {
     const evtSource = new EventSource(`${window.location.origin}/api/events/runs/${runId}`);
@@ -40,8 +49,59 @@ export default function RunSummary(props: { data: AggregatedTests[]; runId: stri
     return () => evtSource.close();
   }, [runId]);
 
+  const filterOutcome = (outcome: string) => {
+    if (outcome === "all") {
+      setTests(testsData);
+      return;
+    }
+
+    setTests(
+      testsData.map((aggTests) => ({ ...aggTests, tests: aggTests.tests.filter((test) => test.outcome === outcome) }))
+    );
+  };
+
+  const filterTestName = debounce((value: string) => {
+    if (value === "") {
+      setTests(testsData);
+      return;
+    }
+
+    setTests(
+      testsData.map((aggTests) => ({
+        ...aggTests,
+        tests: aggTests.tests.filter((test) => new RegExp(value, "i").test(test.title)),
+      }))
+    );
+  }, 500);
+
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex gap-2 flex-wrap justify-between">
+        <Input
+          placeholder="Filter test name"
+          className="grow-0 w-96"
+          onChange={(ev) => filterTestName(ev.target.value)}
+        />
+
+        <Tabs defaultValue="all" onValueChange={(value) => filterOutcome(value)}>
+          <TabsList>
+            <TabsTrigger value="all">All results</TabsTrigger>
+            <TabsTrigger value="expected">
+              <CheckCircle2 className="text-green-600 w-4 h-4" /> &nbsp; {runData.results?.expected} Expected
+            </TabsTrigger>
+            <TabsTrigger value="unexpected">
+              <XCircle className="text-red-600 w-4 h-4" /> &nbsp; {runData.results?.unexpected} Unexpected
+            </TabsTrigger>
+            <TabsTrigger value="flaky">
+              <Dices className="text-orange-600 w-4 h-4" /> &nbsp; {runData.results?.flaky} Flaky
+            </TabsTrigger>
+            <TabsTrigger value="skipped">
+              <SkipForward className="text-stone-600 w-4 h-4" /> &nbsp; {runData.results?.skipped} Skipped
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
       {tests.map((file) => {
         return (
           <Card key={file._id} className="shadow-sm">
@@ -53,6 +113,7 @@ export default function RunSummary(props: { data: AggregatedTests[]; runId: stri
             </Card.Header>
 
             <Card.Content className="p-4">
+              {file.tests.length === 0 && <div className="text-sm text-muted-foreground">No results </div>}
               {file.tests.map((row) => {
                 const duration = formatDuration(row.startTime?.$date, row.endTime?.$date);
 
@@ -102,7 +163,7 @@ const TestStatusIcon = ({ status }: { status: PlaywrightTests["status"] }) => {
       return <SkipForward className="text-stone-500 w-4 h-4" />;
 
     case "timedOut":
-      return <TimerOff className="text-stone-500 w-4 h-4" />;
+      return <TimerOff className="text-red-500 w-4 h-4" />;
 
     default:
       return null;
